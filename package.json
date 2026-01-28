@@ -7,7 +7,7 @@
     "dev:dev": "cross-env NODE_ENV=development next dev",
     "dev:uat": "dotenv -e .env.uat -- cross-env NEXT_PUBLIC_ENV=uat next dev",
     "dev:prod": "cross-env NODE_ENV=production next dev",
-    "build": "next build",
+    "build": "cross-env NEXT_TURBOPACK_EXPERIMENTAL_USE_SYSTEM_TLS_CERTS=1 next build",
     "build:dev": "cross-env NODE_ENV=development next build",
     "build:uat": "dotenv -e .env.uat -- cross-env NEXT_PUBLIC_ENV=uat next build",
     "build:prod": "cross-env NODE_ENV=production next build",
