@@ -4,7 +4,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
-  title: "JM Rank AI | Marketing Suite",
+  title: "Rank AI | Marketing Suite",
   description: "Optimize ontent and improve SEO & GEO performance",
 };
 

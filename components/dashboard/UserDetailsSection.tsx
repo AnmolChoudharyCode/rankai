@@ -4,7 +4,7 @@ export default function UserDetailsSection() {
   // Mock user data - in a real app, this would come from an API or context
   const userDetails = {
     name: 'John Doe',
-    email: 'john.doe@jmfinancial.com',
+    email: 'john.doe@example.com',
     role: 'Content Manager',
     department: 'Marketing',
     lastLoginDate: 'Jan 15, 2024',
