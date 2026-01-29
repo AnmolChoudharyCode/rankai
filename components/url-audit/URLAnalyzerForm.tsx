@@ -9,6 +9,8 @@ export default function URLAnalyzerForm() {
   const [geoRegion, setGeoRegion] = useState('United States');
   const [primaryKeyword, setPrimaryKeyword] = useState('');
   const [secondaryKeyword, setSecondaryKeyword] = useState('');
+   const [industry, setIndustry] = useState('');
+  const [pageType, setPageType] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [seoData, setSeoData] = useState<SEOIssuesResponse | null>(null);
   const [rawHtmlData, setRawHtmlData] = useState<RawHTMLResponse | null>(null);
@@ -160,6 +162,73 @@ export default function URLAnalyzerForm() {
           </div>
         </div>
 
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <div>
+            <label htmlFor="industry" className="block text-sm font-medium text-gray-700 mb-2">
+              Industry <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg
+                  className="w-5 h-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                  />
+                </svg>
+              </div>
+              <input
+                type="text"
+                id="industry"
+                value={industry}
+                onChange={(e) => setIndustry(e.target.value)}
+                placeholder="e.g.Financial Services"
+                required
+                className="w-full pl-10 text-black pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#272b8b] focus:border-[#272b8b] outline-none"
+              />
+            </div>
+          </div>
+
+        
+          <div>
+            <label htmlFor="pagetype" className="block text-sm font-medium text-gray-700 mb-2">
+          Page type<span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg
+                  className="w-5 h-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                  />
+                </svg>
+              </div>
+              <input
+                type="text"
+                id="pagetype"
+                value={pageType}
+                onChange={(e) => setPageType(e.target.value)}
+                placeholder="e.g.,Informational"
+                required
+                className="w-full pl-10 pr-4 py-3 text-black border border-gray-300 rounded-md focus:ring-2 focus:ring-[#272b8b] focus:border-[#272b8b] outline-none"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Error Message */}
         {error && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-md">
@@ -216,6 +285,8 @@ export default function URLAnalyzerForm() {
           primaryKeyword={primaryKeyword}
           secondaryKeyword={secondaryKeyword}
           seoData={seoData} 
+          industry={industry}
+          pageType={pageType}
           rawHtmlData={rawHtmlData} 
           overviewData={overviewData} 
         />
