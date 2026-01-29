@@ -26,8 +26,7 @@ export default function Footer() {
     ],
   };
 
-  //Added the comment for testing the code review process
-  //Added the comment for testing the code review process - push 10
+  //Added the comment for testing the code review process for new process
 
   return (
     <footer className="bg-white border-t border-gray-200 mt-auto">
