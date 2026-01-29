@@ -285,7 +285,70 @@ export interface FAQResponse {
 export async function getFAQs(
   payload: SEOIssuesRequest
 ): Promise<FAQResponse> {
-  return backendCall<FAQResponse>('audit/ai-recommendation/faq', {
+  return backendCall<FAQResponse>('/audit/ai-recommendation/faq', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * AI Recommendations - Evaluate Page (LLM visibility) API
+ */
+export type VisibilityLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export interface LLMVisibilitySummary {
+  overall_visibility_score: number;
+  visibility_level: VisibilityLevel;
+  primary_blockers: string[];
+}
+
+export interface ParameterScore {
+  parameter: string;
+  score: number;
+  justification: string;
+  blocking_issues: string[];
+  recommended_fixes: string[];
+}
+
+export interface CitationConfidence {
+  current_state: 'LOW' | 'MEDIUM' | 'HIGH';
+  why_or_why_not: string;
+  what_would_improve_it: string[];
+}
+
+export interface RecommendedNextActions {
+  quick_wins: string[];
+  structural_changes: string[];
+}
+
+export interface EvaluatePageResponse {
+  llm_visibility_summary: LLMVisibilitySummary;
+  parameter_scores: ParameterScore[];
+  citation_confidence: CitationConfidence;
+  recommended_next_actions: RecommendedNextActions;
+}
+
+export interface PageContext {
+  url: string;
+  page_type: string;
+  primary_keyword: string;
+  geo_context: string;
+  industry: string;
+}
+
+export interface EvaluatePageRequest {
+  page_context: PageContext;
+  page_content: string;
+}
+
+/**
+ * Evaluate page for LLM visibility
+ * Endpoint: /audit/ai-recommendation/evaluate-page
+ */
+export async function evaluatePage(
+  payload: EvaluatePageRequest
+): Promise<EvaluatePageResponse> {
+  return backendCall<EvaluatePageResponse>('/audit/ai-recommendation/evaluate-page', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
