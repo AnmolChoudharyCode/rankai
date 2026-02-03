@@ -51,7 +51,7 @@ export default function URLAnalyzerForm() {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="mb-4 sm:mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">URL Analyzer</h1>
         <p className="text-sm sm:text-base text-gray-600">

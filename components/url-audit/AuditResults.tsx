@@ -64,12 +64,21 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
   const [faqs, setFaqs] = useState<FAQResponse | null>(null);
   const [faqsLoading, setFaqsLoading] = useState(false);
   const [faqsError, setFaqsError] = useState<string | null>(null);
-  const faqsFetchedRef = useRef(false);
+  const faqsFetchedRef = useRef<string>('');
 
   const [evaluation, setEvaluation] = useState<EvaluatePageResponse | null>(null);
   const [evaluationLoading, setEvaluationLoading] = useState(false);
   const [evaluationError, setEvaluationError] = useState<string | null>(null);
-  const evaluationFetchedRef = useRef(false);
+  const evaluationFetchedRef = useRef<string>('');
+
+  // n8n toggle state - load from localStorage
+  const [useN8n, setUseN8n] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('useN8n');
+      return saved === 'true';
+    }
+    return false;
+  });
 
   const tabs = [
     'Summary',
@@ -131,16 +140,25 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
     fetchCompetitors();
   }, [url, primaryKeyword, secondaryKeyword]);
 
-  // Fetch FAQs data once when component mounts
+  // Fetch FAQs data once when component mounts or when useN8n changes
   useEffect(() => {
+    // Create a unique key for this fetch based on dependencies
+    const fetchKey = `${url}-${primaryKeyword}-${secondaryKeyword}-${useN8n}`;
+    
+    // Check if we've already fetched for this combination
+    if (faqsFetchedRef.current === fetchKey) {
+      return;
+    }
+
     const fetchFAQs = async () => {
-      if (!url || !primaryKeyword || !secondaryKeyword || faqsFetchedRef.current) {
+      if (!url || !primaryKeyword || !secondaryKeyword) {
         return;
       }
 
+      // Mark as fetching for this combination
+      faqsFetchedRef.current = fetchKey;
       setFaqsLoading(true);
       setFaqsError(null);
-      faqsFetchedRef.current = true;
       
       try {
         const payload = {
@@ -149,30 +167,40 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
           secondaryKeyword: secondaryKeyword.trim(),
         };
         
-        const response = await getFAQs(payload);
+        const response = await getFAQs(payload, useN8n);
         setFaqs(response);
       } catch (err) {
         setFaqsError(err instanceof Error ? err.message : 'Failed to fetch FAQs');
         console.error('Error fetching FAQs:', err);
-        faqsFetchedRef.current = false; // Allow retry on error
+        // Reset ref on error to allow retry
+        faqsFetchedRef.current = '';
       } finally {
         setFaqsLoading(false);
       }
     };
 
     fetchFAQs();
-  }, [url, primaryKeyword, secondaryKeyword]);
+  }, [url, primaryKeyword, secondaryKeyword, useN8n]);
 
-  // Fetch AI evaluation once when component mounts
+  // Fetch AI evaluation once when component mounts or when useN8n changes
   useEffect(() => {
+    // Create a unique key for this fetch based on dependencies
+    const fetchKey = `${url}-${primaryKeyword}-${secondaryKeyword}-${geoRegion}-${useN8n}`;
+    
+    // Check if we've already fetched for this combination
+    if (evaluationFetchedRef.current === fetchKey) {
+      return;
+    }
+
     const fetchEvaluation = async () => {
-      if (!url || !primaryKeyword || !secondaryKeyword || evaluationFetchedRef.current) {
+      if (!url || !primaryKeyword || !secondaryKeyword) {
         return;
       }
 
+      // Mark as fetching for this combination
+      evaluationFetchedRef.current = fetchKey;
       setEvaluationLoading(true);
       setEvaluationError(null);
-      evaluationFetchedRef.current = true;
 
       try {
         const payload: EvaluatePageRequest = {
@@ -186,19 +214,20 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
           page_content: '',
         };
 
-        const response = await evaluatePage(payload);
+        const response = await evaluatePage(payload, useN8n);
         setEvaluation(response);
       } catch (err) {
         setEvaluationError(err instanceof Error ? err.message : 'Failed to evaluate page');
         console.error('Error evaluating page:', err);
-        evaluationFetchedRef.current = false; // Allow retry on error
+        // Reset ref on error to allow retry
+        evaluationFetchedRef.current = '';
       } finally {
         setEvaluationLoading(false);
       }
     };
 
     fetchEvaluation();
-  }, [url, primaryKeyword, secondaryKeyword, geoRegion]);
+  }, [url, primaryKeyword, secondaryKeyword, geoRegion, useN8n]);
 
   // Helper function to map API check status to UI status
   const getStatus = (pass: boolean, severity: string): 'passed' | 'failed' => {
@@ -260,7 +289,7 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
   }, [seoData]);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 mt-8 max-w-4xl mx-auto">
+    <div className="bg-white rounded-lg border border-gray-200 mt-8 max-w-6xl mx-auto">
       {/* Tabs */}
       <div className="border-b border-gray-200">
         <div className="flex overflow-x-auto">
@@ -535,6 +564,42 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
 
         {activeTab === 'AI Recommendations' && (
           <div className="space-y-8">
+            {/* n8n Toggle Switch */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="flex items-center gap-3">
+                <label htmlFor="n8n-toggle" className="text-sm font-medium text-gray-700">
+                  Use n8n Endpoints
+                </label>
+                <span className="text-xs text-gray-500">
+                  ({useN8n ? 'n8n' : 'Standard'} endpoints)
+                </span>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={useN8n}
+                onClick={() => {
+                  const newValue = !useN8n;
+                  setUseN8n(newValue);
+                  localStorage.setItem('useN8n', String(newValue));
+                  // Reset refs and clear data to allow refetching with new endpoint
+                  faqsFetchedRef.current = '';
+                  evaluationFetchedRef.current = '';
+                  setFaqs(null);
+                  setEvaluation(null);
+                }}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#272b8b] focus:ring-offset-2 ${
+                  useN8n ? 'bg-[#272b8b]' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    useN8n ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
             {/* AI Fix Banner */}
             {/* <AIFixBanner /> */}
 

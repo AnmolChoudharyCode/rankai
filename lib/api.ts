@@ -283,9 +283,11 @@ export interface FAQResponse {
  * Payload: { url: string, primaryKeyword: string, secondaryKeyword: string }
  */
 export async function getFAQs(
-  payload: SEOIssuesRequest
+  payload: SEOIssuesRequest,
+  useN8n: boolean = false
 ): Promise<FAQResponse> {
-  return backendCall<FAQResponse>('/audit/ai-recommendation/faq', {
+  const endpoint = useN8n ? '/audit/n8n/faq' : '/audit/ai-recommendation/faq';
+  return backendCall<FAQResponse>(endpoint, {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -346,9 +348,11 @@ export interface EvaluatePageRequest {
  * Endpoint: /audit/ai-recommendation/evaluate-page
  */
 export async function evaluatePage(
-  payload: EvaluatePageRequest
+  payload: EvaluatePageRequest,
+  useN8n: boolean = false
 ): Promise<EvaluatePageResponse> {
-  return backendCall<EvaluatePageResponse>('/audit/ai-recommendation/evaluate-page', {
+  const endpoint = useN8n ? '/audit/n8n/evaluate-page' : '/audit/ai-recommendation/evaluate-page';
+  return backendCall<EvaluatePageResponse>(endpoint, {
     method: 'POST',
     body: JSON.stringify(payload),
   });
