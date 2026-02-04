@@ -24,7 +24,9 @@ async function fetchWithErrorHandling(
     });
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      // Log technical details for debugging, but show user-friendly message
+      console.error(`API Error: ${response.status} ${response.statusText}`);
+      throw new Error('Unable to process your request. Please try again later.');
     }
 
     return response;
@@ -43,7 +45,40 @@ export async function apiCall<T>(
 ): Promise<T> {
   const url = getApiUrl(endpoint);
   const response = await fetchWithErrorHandling(url, options);
-  return response.json() as Promise<T>;
+  
+  // Handle 204 No Content responses
+  if (response.status === 204) {
+    console.error('API returned empty response (204 No Content)');
+    throw new Error('No data available. Please try again later.');
+  }
+  
+  // Get response text first (can only read once)
+  const text = await response.text();
+  
+  // Check if response is empty
+  if (!text || text.trim().length === 0) {
+    console.error('API returned empty response');
+    throw new Error('No data received. Please try again later.');
+  }
+  
+  // Check content type if available
+  const contentType = response.headers.get('content-type');
+  if (contentType && !contentType.includes('application/json') && !contentType.includes('text/json')) {
+    console.error(`API returned non-JSON response (${contentType})`);
+    throw new Error('Unable to process the response. Please try again later.');
+  }
+  
+  // Try to parse JSON, with better error handling
+  try {
+    return JSON.parse(text) as T;
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      // Log technical details for debugging
+      console.error('Failed to parse JSON response:', error);
+      throw new Error('Unable to process the data. Please try again later.');
+    }
+    throw error;
+  }
 }
 
 /**
@@ -55,7 +90,40 @@ export async function backendCall<T>(
 ): Promise<T> {
   const url = getBackendUrl(endpoint);
   const response = await fetchWithErrorHandling(url, options);
-  return response.json() as Promise<T>;
+  
+  // Handle 204 No Content responses
+  if (response.status === 204) {
+    console.error('API returned empty response (204 No Content)');
+    throw new Error('No data available. Please try again later.');
+  }
+  
+  // Get response text first (can only read once)
+  const text = await response.text();
+  
+  // Check if response is empty
+  if (!text || text.trim().length === 0) {
+    console.error('API returned empty response');
+    throw new Error('No data received. Please try again later.');
+  }
+  
+  // Check content type if available
+  const contentType = response.headers.get('content-type');
+  if (contentType && !contentType.includes('application/json') && !contentType.includes('text/json')) {
+    console.error(`API returned non-JSON response (${contentType})`);
+    throw new Error('Unable to process the response. Please try again later.');
+  }
+  
+  // Try to parse JSON, with better error handling
+  try {
+    return JSON.parse(text) as T;
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      // Log technical details for debugging
+      console.error('Failed to parse JSON response:', error);
+      throw new Error('Unable to process the data. Please try again later.');
+    }
+    throw error;
+  }
 }
 
 /**

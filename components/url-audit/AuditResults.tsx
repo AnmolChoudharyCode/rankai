@@ -61,15 +61,31 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
   const [competitorsError, setCompetitorsError] = useState<string | null>(null);
   const competitorsFetchedRef = useRef(false);
   
-  const [faqs, setFaqs] = useState<FAQResponse | null>(null);
+  // Cache FAQs for both endpoints
+  const [faqsCache, setFaqsCache] = useState<{ standard: FAQResponse | null; n8n: FAQResponse | null }>({
+    standard: null,
+    n8n: null,
+  });
   const [faqsLoading, setFaqsLoading] = useState(false);
   const [faqsError, setFaqsError] = useState<string | null>(null);
-  const faqsFetchedRef = useRef<string>('');
+  const faqsFetchedRef = useRef<Set<string>>(new Set());
+  const faqsCacheRef = useRef<{ standard: FAQResponse | null; n8n: FAQResponse | null }>({
+    standard: null,
+    n8n: null,
+  });
 
-  const [evaluation, setEvaluation] = useState<EvaluatePageResponse | null>(null);
+  // Cache evaluation for both endpoints
+  const [evaluationCache, setEvaluationCache] = useState<{ standard: EvaluatePageResponse | null; n8n: EvaluatePageResponse | null }>({
+    standard: null,
+    n8n: null,
+  });
   const [evaluationLoading, setEvaluationLoading] = useState(false);
   const [evaluationError, setEvaluationError] = useState<string | null>(null);
-  const evaluationFetchedRef = useRef<string>('');
+  const evaluationFetchedRef = useRef<Set<string>>(new Set());
+  const evaluationCacheRef = useRef<{ standard: EvaluatePageResponse | null; n8n: EvaluatePageResponse | null }>({
+    standard: null,
+    n8n: null,
+  });
 
   // n8n toggle state - load from localStorage
   const [useN8n, setUseN8n] = useState<boolean>(() => {
@@ -140,13 +156,19 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
     fetchCompetitors();
   }, [url, primaryKeyword, secondaryKeyword]);
 
-  // Fetch FAQs data once when component mounts or when useN8n changes
   useEffect(() => {
     // Create a unique key for this fetch based on dependencies
-    const fetchKey = `${url}-${primaryKeyword}-${secondaryKeyword}-${useN8n}`;
+    const baseKey = `${url}-${primaryKeyword}-${secondaryKeyword}`;
+    const fetchKey = `${baseKey}-${useN8n}`;
+    const cacheKey = useN8n ? 'n8n' : 'standard';
     
-    // Check if we've already fetched for this combination
-    if (faqsFetchedRef.current === fetchKey) {
+    // Check if we already have cached data for this endpoint
+    if (faqsCacheRef.current[cacheKey]) {
+      return; // Already have cached data, no need to fetch
+    }
+    
+
+    if (faqsFetchedRef.current.has(fetchKey)) {
       return;
     }
 
@@ -156,7 +178,7 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
       }
 
       // Mark as fetching for this combination
-      faqsFetchedRef.current = fetchKey;
+      faqsFetchedRef.current.add(fetchKey);
       setFaqsLoading(true);
       setFaqsError(null);
       
@@ -168,12 +190,35 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
         };
         
         const response = await getFAQs(payload, useN8n);
-        setFaqs(response);
+        
+        // Cache the result in both state and ref
+        faqsCacheRef.current[cacheKey] = response;
+        setFaqsCache(prev => ({
+          ...prev,
+          [cacheKey]: response,
+        }));
+        // Clear any previous errors on success
+        setFaqsError(null);
       } catch (err) {
-        setFaqsError(err instanceof Error ? err.message : 'Failed to fetch FAQs');
+        const errorMessage = err instanceof Error 
+          ? err.message 
+          : 'Unable to load FAQ recommendations. Please try again later.';
+        
+        let userFriendlyMessage = errorMessage;
+        if (errorMessage.includes('Failed to fetch') || errorMessage.includes('network') || errorMessage.includes('Network')) {
+          userFriendlyMessage = 'Connection error. Please check your internet connection and try again.';
+        }
+        
+        setFaqsError(userFriendlyMessage);
         console.error('Error fetching FAQs:', err);
-        // Reset ref on error to allow retry
-        faqsFetchedRef.current = '';
+        // Remove from set on error to allow retry
+        faqsFetchedRef.current.delete(fetchKey);
+        // Clear cache for this endpoint on error
+        faqsCacheRef.current[cacheKey] = null;
+        setFaqsCache(prev => ({
+          ...prev,
+          [cacheKey]: null,
+        }));
       } finally {
         setFaqsLoading(false);
       }
@@ -182,13 +227,20 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
     fetchFAQs();
   }, [url, primaryKeyword, secondaryKeyword, useN8n]);
 
-  // Fetch AI evaluation once when component mounts or when useN8n changes
+  // Fetch AI evaluation - cache results for both endpoints
   useEffect(() => {
     // Create a unique key for this fetch based on dependencies
-    const fetchKey = `${url}-${primaryKeyword}-${secondaryKeyword}-${geoRegion}-${useN8n}`;
+    const baseKey = `${url}-${primaryKeyword}-${secondaryKeyword}-${geoRegion}`;
+    const fetchKey = `${baseKey}-${useN8n}`;
+    const cacheKey = useN8n ? 'n8n' : 'standard';
+    
+    // Check if we already have cached data for this endpoint
+    if (evaluationCacheRef.current[cacheKey]) {
+      return; // Already have cached data, no need to fetch
+    }
     
     // Check if we've already fetched for this combination
-    if (evaluationFetchedRef.current === fetchKey) {
+    if (evaluationFetchedRef.current.has(fetchKey)) {
       return;
     }
 
@@ -198,7 +250,7 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
       }
 
       // Mark as fetching for this combination
-      evaluationFetchedRef.current = fetchKey;
+      evaluationFetchedRef.current.add(fetchKey);
       setEvaluationLoading(true);
       setEvaluationError(null);
 
@@ -215,12 +267,37 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
         };
 
         const response = await evaluatePage(payload, useN8n);
-        setEvaluation(response);
+        
+        // Cache the result in both state and ref
+        evaluationCacheRef.current[cacheKey] = response;
+        setEvaluationCache(prev => ({
+          ...prev,
+          [cacheKey]: response,
+        }));
+        // Clear any previous errors on success
+        setEvaluationError(null);
       } catch (err) {
-        setEvaluationError(err instanceof Error ? err.message : 'Failed to evaluate page');
+        const errorMessage = err instanceof Error 
+          ? err.message 
+          : 'Unable to evaluate page. Please try again later.';
+        
+        // Use the error message directly (already user-friendly from API layer)
+        // Only override for network-specific errors
+        let userFriendlyMessage = errorMessage;
+        if (errorMessage.includes('Failed to fetch') || errorMessage.includes('network') || errorMessage.includes('Network')) {
+          userFriendlyMessage = 'Connection error. Please check your internet connection and try again.';
+        }
+        
+        setEvaluationError(userFriendlyMessage);
         console.error('Error evaluating page:', err);
-        // Reset ref on error to allow retry
-        evaluationFetchedRef.current = '';
+        // Remove from set on error to allow retry
+        evaluationFetchedRef.current.delete(fetchKey);
+        // Clear cache for this endpoint on error
+        evaluationCacheRef.current[cacheKey] = null;
+        setEvaluationCache(prev => ({
+          ...prev,
+          [cacheKey]: null,
+        }));
       } finally {
         setEvaluationLoading(false);
       }
@@ -582,11 +659,7 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
                   const newValue = !useN8n;
                   setUseN8n(newValue);
                   localStorage.setItem('useN8n', String(newValue));
-                  // Reset refs and clear data to allow refetching with new endpoint
-                  faqsFetchedRef.current = '';
-                  evaluationFetchedRef.current = '';
-                  setFaqs(null);
-                  setEvaluation(null);
+                  // No need to reset - cached data will be used if available
                 }}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#272b8b] focus:ring-offset-2 ${
                   useN8n ? 'bg-[#272b8b]' : 'bg-gray-300'
@@ -603,19 +676,35 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
             {/* AI Fix Banner */}
             {/* <AIFixBanner /> */}
 
-            <EvaluatePageView
-              data={evaluation}
-              isLoading={evaluationLoading}
-              error={evaluationError}
-            />
+            {/* Unified Loading Banner - Show ONLY when either is loading */}
+            {(evaluationLoading || faqsLoading) && (
+              <div className="relative overflow-hidden rounded-[32px] bg-[#F5F5F5] p-8 md:p-12 shadow-2xl border border-white/10 mb-8">
+                <div className="relative z-10 flex items-center gap-4">
+                  <div className="flex-1">
+                    <h3 className="text-xl md:text-2xl font-normal text-black text-center">Evaluating...</h3>
+                  </div>
+                </div>
+              </div>
+            )}
 
-            {/* FAQs Section */}
-            <FAQView
-              extractedFaqs={faqs?.extractedFaqs || []}
-              generatedFaqs={faqs?.generatedFaqs || []}
-              isLoading={faqsLoading}
-              error={faqsError}
-            />
+            {/* Show Evaluate Page View only when not loading */}
+            {!evaluationLoading && (
+              <EvaluatePageView
+                data={useN8n ? evaluationCache.n8n : evaluationCache.standard}
+                isLoading={false}
+                error={evaluationError}
+              />
+            )}
+
+            {/* Show FAQs Section only when not loading */}
+            {!faqsLoading && (
+              <FAQView
+                extractedFaqs={(useN8n ? faqsCache.n8n : faqsCache.standard)?.extractedFaqs || []}
+                generatedFaqs={(useN8n ? faqsCache.n8n : faqsCache.standard)?.generatedFaqs || []}
+                isLoading={false}
+                error={faqsError}
+              />
+            )}
           </div>
         )}
 
