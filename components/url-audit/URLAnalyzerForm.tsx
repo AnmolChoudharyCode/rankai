@@ -6,7 +6,7 @@ import { getSEOIssues, getRawHTML, getOverview, SEOIssuesResponse, RawHTMLRespon
 
 export default function URLAnalyzerForm() {
   const [url, setUrl] = useState('');
-  const [geoRegion, setGeoRegion] = useState('United States');
+  const [geoRegion, setGeoRegion] = useState('India');
   const [primaryKeyword, setPrimaryKeyword] = useState('');
   const [secondaryKeyword, setSecondaryKeyword] = useState('');
    const [industry, setIndustry] = useState('');
