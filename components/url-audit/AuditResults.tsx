@@ -678,7 +678,7 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
 
             {/* Unified Loading Banner - Show ONLY when either is loading */}
             {(evaluationLoading || faqsLoading) && (
-              <div className="relative overflow-hidden rounded-[32px] bg-[#F5F5F5] p-8 md:p-12 shadow-2xl border border-white/10 mb-8">
+              <div className="relative overflow-hidden rounded-[32px] bg-[#F5F5F5] p-4 md:p-6 shadow-xl border border-white/10 mb-8">
                 <div className="relative z-10 flex items-center gap-4">
                   <div className="flex-1">
                     <h3 className="text-xl md:text-2xl font-normal text-black text-center">Evaluating...</h3>

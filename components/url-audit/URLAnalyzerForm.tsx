@@ -1,8 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AuditResults from './AuditResults';
 import { getSEOIssues, getRawHTML, getOverview, SEOIssuesResponse, RawHTMLResponse, OverviewResponse } from '@/lib/api';
+
+const LOADING_MESSAGES = [
+  'Scanning the page…',
+  'Crunching SEO signals…',
+  'Decoding search intent…',
+  'Mapping site structure…',
+  'Evaluating keyword relevance…',
+  'Analyzing geographic signals…',
+  'Checking technical health…',
+  'Aligning with ranking factors…',
+  'Identifying optimization gaps…',
+  'Crafting actionable recommendations…',
+];
 
 export default function URLAnalyzerForm() {
   const [url, setUrl] = useState('');
@@ -17,6 +30,21 @@ export default function URLAnalyzerForm() {
   const [overviewData, setOverviewData] = useState<OverviewResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentLoadingMessage, setCurrentLoadingMessage] = useState(0);
+
+  // Cycle through loading messages when loading
+  useEffect(() => {
+    if (!isLoading) {
+      setCurrentLoadingMessage(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setCurrentLoadingMessage((prev) => (prev + 1) % LOADING_MESSAGES.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +86,21 @@ export default function URLAnalyzerForm() {
           Get comprehensive SEO insights and recommendations for any webpage
         </p>
       </div>
+
+      {/* Loading Status Display */}
+      {/* {isLoading && (
+        <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-4">
+            <svg className="animate-spin h-6 w-6 text-[#272b8b]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="text-lg font-medium text-gray-800 animate-pulse">
+              {LOADING_MESSAGES[currentLoadingMessage]}
+            </p>
+          </div>
+        </div>
+      )} */}
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* Paste URL Field */}
@@ -241,19 +284,30 @@ export default function URLAnalyzerForm() {
           <button
             type="submit"
             disabled={!url.trim() || !primaryKeyword.trim() || !secondaryKeyword.trim() || isLoading}
-            className={`flex items-center gap-2 font-medium py-3 px-6 rounded-md transition-colors ${
+            className={`flex items-center gap-2 font-medium rounded-md ${
               url.trim() && primaryKeyword.trim() && secondaryKeyword.trim() && !isLoading
-                ? 'bg-[#272b8b] hover:bg-[#272b8b]/80 text-white cursor-pointer'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-[#272b8b] hover:bg-[#272b8b]/80 text-white cursor-pointer py-3 px-6 transition-colors '
+                : 'cursor-not-allowed'
             }`}
           >
             {isLoading ? (
               <>
-                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-4">
+            <svg className="animate-spin h-6 w-6 text-[#272b8b]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="text-lg font-medium text-gray-800 animate-pulse">
+              {LOADING_MESSAGES[currentLoadingMessage]}
+            </p>
+          </div>
+        </div>
+                {/* <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Loading...
+                {LOADING_MESSAGES[currentLoadingMessage]} */}
               </>
             ) : (
               <>
