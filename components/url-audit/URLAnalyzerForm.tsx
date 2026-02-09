@@ -3,6 +3,20 @@
 import { useState, useEffect } from 'react';
 import AuditResults from './AuditResults';
 import { getSEOIssues, getRawHTML, getOverview, SEOIssuesResponse, RawHTMLResponse, OverviewResponse } from '@/lib/api';
+const animatedDottedLineStyle = `
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .animated-dotted-circle {
+    animation: rotate 2s linear infinite;
+    transform-origin: center;
+  }
+`;
 
 const LOADING_MESSAGES = [
   'Scanning the page…',
@@ -79,7 +93,9 @@ export default function URLAnalyzerForm() {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
+    <>
+      <style>{animatedDottedLineStyle}</style>
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="mb-4 sm:mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">URL Analyzer</h1>
         <p className="text-sm sm:text-base text-gray-600">
@@ -292,22 +308,25 @@ export default function URLAnalyzerForm() {
           >
             {isLoading ? (
               <>
-                <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                <div className="">
           <div className="flex items-center gap-4">
-            <svg className="animate-spin h-6 w-6 text-[#272b8b]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <svg className="h-5 w-5 animated-dotted-circle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+              <circle 
+                cx="12" 
+                cy="12" 
+                r="10" 
+                stroke="#272b8b" 
+                strokeWidth="3" 
+                strokeLinecap="round" 
+                strokeDasharray="4 4"
+                fill="none"
+              />
             </svg>
-            <p className="text-lg font-medium text-gray-800 animate-pulse">
+            <p className="text-sm font-normal text-gray-800 animate-pulse">
               {LOADING_MESSAGES[currentLoadingMessage]}
             </p>
           </div>
         </div>
-                {/* <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {LOADING_MESSAGES[currentLoadingMessage]} */}
               </>
             ) : (
               <>
@@ -346,6 +365,7 @@ export default function URLAnalyzerForm() {
         />
       )}
     </div>
+    </>
   );
 }
 
