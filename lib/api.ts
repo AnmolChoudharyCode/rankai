@@ -404,6 +404,7 @@ export interface PageContext {
   primary_keyword: string;
   geo_context: string;
   industry: string;
+  score: number;
 }
 
 export interface EvaluatePageRequest {

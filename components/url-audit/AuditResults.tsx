@@ -262,6 +262,7 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
             primary_keyword: primaryKeyword.trim(),
             geo_context: geoRegion || 'India',
             industry: 'Financial Services',
+            score: seoData.geoScore,
           },
           page_content: '',
         };
