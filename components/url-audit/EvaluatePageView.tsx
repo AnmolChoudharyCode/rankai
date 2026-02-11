@@ -15,6 +15,11 @@ function clampScore(score: number) {
   return Math.max(0, Math.min(100, score));
 }
 
+function clampParameterScore(score: number) {
+  if (Number.isNaN(score)) return 0;
+  return Math.max(0, Math.min(10, score));
+}
+
 function levelStyles(level: VisibilityLevel) {
   switch (level) {
     case 'HIGH':
@@ -31,6 +36,13 @@ function scoreColor(score: number) {
   const s = clampScore(score);
   if (s >= 85) return 'bg-green-500';
   if (s >= 70) return 'bg-yellow-500';
+  return 'bg-red-500';
+}
+
+function parameterScoreColor(score: number) {
+  const s = clampParameterScore(score);
+  if (s >= 8.5) return 'bg-green-500';
+  if (s >= 7.0) return 'bg-yellow-500';
   return 'bg-red-500';
 }
 
@@ -53,7 +65,8 @@ function ParameterCard({
   isOpen: boolean;
   onToggle: () => void;
 }) {
-  const s = clampScore(item.score);
+  const s = clampParameterScore(item.score);
+  const percentage = (s / 10) * 100;
   return (
     <div
       className={`
@@ -81,7 +94,7 @@ function ParameterCard({
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className="text-xl font-bold text-slate-900">{s}</span>
-              <span className="text-xl text-slate-400 font-bold">/100</span>
+              <span className="text-xl text-slate-400 font-bold">/10</span>
               <svg className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
               </svg>
@@ -89,7 +102,7 @@ function ParameterCard({
           </div>
           <div className="mt-3">
             <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-              <div className={`h-2 ${scoreColor(s)} rounded-full transition-all duration-500`} style={{ width: `${s}%` }} />
+              <div className={`h-2 ${parameterScoreColor(s)} rounded-full transition-all duration-500`} style={{ width: `${percentage}%` }} />
             </div>
           </div>
         </div>
@@ -136,7 +149,7 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
 
   const sortedParams = useMemo(() => {
     if (!data?.parameter_scores) return [];
-    return [...data.parameter_scores].sort((a, b) => clampScore(b.score) - clampScore(a.score));
+    return [...data.parameter_scores].sort((a, b) => clampParameterScore(b.score) - clampParameterScore(a.score));
   }, [data]);
 
   // Don't render anything when loading - unified banner handles it
@@ -157,7 +170,8 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
 
   const summary = data.llm_visibility_summary;
   const level = levelStyles(summary.visibility_level);
-  const overall = clampScore(summary.overall_visibility_score);
+  const overall = clampParameterScore(summary.overall_visibility_score);
+  const overallPercentage = (overall / 10) * 100;
 
   return (
     <div className="space-y-8">
@@ -204,11 +218,11 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
           <div className="flex items-center gap-5">
             <div className="text-right">
               <div className="text-4xl md:text-5xl font-bold text-slate-900 leading-none">{overall}</div>
-              <div className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-2">out of 100</div>
+              <div className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-2">out of 10</div>
             </div>
             <div className="w-32 md:w-40">
               <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className={`h-2 ${scoreColor(overall)} rounded-full transition-all duration-700`} style={{ width: `${overall}%` }} />
+                <div className={`h-2 ${parameterScoreColor(overall)} rounded-full transition-all duration-700`} style={{ width: `${overallPercentage}%` }} />
               </div>
             </div>
           </div>
