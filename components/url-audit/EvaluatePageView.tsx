@@ -170,8 +170,7 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
 
   const summary = data.llm_visibility_summary;
   const level = levelStyles(summary.visibility_level);
-  const overall = clampParameterScore(summary.overall_visibility_score);
-  const overallPercentage = (overall / 10) * 100;
+  const overall = clampScore(summary.overall_visibility_score);
 
   return (
     <div className="space-y-8">
@@ -218,11 +217,11 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
           <div className="flex items-center gap-5">
             <div className="text-right">
               <div className="text-4xl md:text-5xl font-bold text-slate-900 leading-none">{overall}</div>
-              <div className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-2">out of 10</div>
+              <div className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-2">out of 100</div>
             </div>
             <div className="w-32 md:w-40">
               <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className={`h-2 ${parameterScoreColor(overall)} rounded-full transition-all duration-700`} style={{ width: `${overallPercentage}%` }} />
+                <div className={`h-2 ${scoreColor(overall)} rounded-full transition-all duration-700`} style={{ width: `${overall}%` }} />
               </div>
             </div>
           </div>
