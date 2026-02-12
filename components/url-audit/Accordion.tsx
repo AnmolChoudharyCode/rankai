@@ -37,10 +37,10 @@ const Accordion: React.FC<AccordionProps> = ({ faq, type, isOpenByDefault = fals
         chevron: 'bg-slate-100 text-slate-400'
       }
     : {
-        border: 'border-white hover:border-indigo-200',
-        active: 'border-indigo-600 bg-white shadow-2xl ring-8 ring-indigo-50',
-        icon: 'bg-indigo-50 text-indigo-600',
-        chevron: 'bg-indigo-600 text-white'
+        border: 'border-white hover:border-[#272b8b]',
+        active: 'border border-[#272b8b] bg-white shadow-xl ring-2 ring-indigo-50',
+        icon: 'bg-[#272b8b] text-[#272b8b]-600',
+        chevron: 'bg-[#272b8b] text-white'
       };
 
   return (

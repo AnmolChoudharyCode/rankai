@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AuditResults from './AuditResults';
-import { getSEOIssues, getRawHTML, getOverview, SEOIssuesResponse, RawHTMLResponse, OverviewResponse } from '@/lib/api';
+import { getSEOIssues, getRawHTML, getOverview, SEOIssuesResponse, RawHTMLResponse, OverviewResponse, getIndustries, getPageTypes } from '@/lib/api';
 const animatedDottedLineStyle = `
   @keyframes rotate {
     from {
@@ -36,7 +36,7 @@ export default function URLAnalyzerForm() {
   const [geoRegion, setGeoRegion] = useState('India');
   const [primaryKeyword, setPrimaryKeyword] = useState('');
   const [secondaryKeyword, setSecondaryKeyword] = useState('');
-   const [industry, setIndustry] = useState('');
+  const [industry, setIndustry] = useState('');
   const [pageType, setPageType] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [seoData, setSeoData] = useState<SEOIssuesResponse | null>(null);
@@ -45,6 +45,33 @@ export default function URLAnalyzerForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentLoadingMessage, setCurrentLoadingMessage] = useState(0);
+  const [industries, setIndustries] = useState<string[]>([]);
+  const [pageTypes, setPageTypes] = useState<string[]>([]);
+  const [loadingOptions, setLoadingOptions] = useState(true);
+
+  // Fetch industries and page types on mount
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        setLoadingOptions(true);
+        const [industriesData, pageTypesData] = await Promise.all([
+          getIndustries(),
+          getPageTypes(),
+        ]);
+        setIndustries(industriesData);
+        setPageTypes(pageTypesData);
+      } catch (err) {
+        console.error('Error fetching options:', err);
+        // Set empty arrays on error so form can still be used
+        setIndustries([]);
+        setPageTypes([]);
+      } finally {
+        setLoadingOptions(false);
+      }
+    };
+
+    fetchOptions();
+  }, []);
 
   // Cycle through loading messages when loading
   useEffect(() => {
@@ -224,10 +251,10 @@ export default function URLAnalyzerForm() {
          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <label htmlFor="industry" className="block text-sm font-medium text-gray-700 mb-2">
-              Industry <span className="text-red-500">*</span>
+              Industry
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
                 <svg
                   className="w-5 h-5 text-gray-400"
                   fill="none"
@@ -242,25 +269,45 @@ export default function URLAnalyzerForm() {
                   />
                 </svg>
               </div>
-              <input
-                type="text"
+              <select
                 id="industry"
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
-                placeholder="e.g.Financial Services"
-                required
-                className="w-full pl-10 text-black pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#272b8b] focus:border-[#272b8b] outline-none"
-              />
+                disabled={loadingOptions}
+                className="w-full pl-10 pr-10 text-black py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#272b8b] focus:border-[#272b8b] outline-none appearance-none bg-white cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed disabled:border-gray-200 transition-all hover:border-gray-400"
+              >
+                <option value="" disabled>Select Industry</option>
+                {industries.map((ind) => (
+                  <option key={ind} value={ind}>
+                    {ind}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <svg
+                  className="w-5 h-5 text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
             </div>
           </div>
 
         
           <div>
             <label htmlFor="pagetype" className="block text-sm font-medium text-gray-700 mb-2">
-          Page type<span className="text-red-500">*</span>
+              Page type
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
                 <svg
                   className="w-5 h-5 text-gray-400"
                   fill="none"
@@ -275,15 +322,35 @@ export default function URLAnalyzerForm() {
                   />
                 </svg>
               </div>
-              <input
-                type="text"
+              <select
                 id="pagetype"
                 value={pageType}
                 onChange={(e) => setPageType(e.target.value)}
-                placeholder="e.g.,Informational"
-                required
-                className="w-full pl-10 pr-4 py-3 text-black border border-gray-300 rounded-md focus:ring-2 focus:ring-[#272b8b] focus:border-[#272b8b] outline-none"
-              />
+                disabled={loadingOptions}
+                className="w-full pl-10 pr-10 text-black py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#272b8b] focus:border-[#272b8b] outline-none appearance-none bg-white cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed disabled:border-gray-200 transition-all hover:border-gray-400"
+              >
+                <option value="" disabled>Select Page Type</option>
+                {pageTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <svg
+                  className="w-5 h-5 text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
@@ -299,9 +366,9 @@ export default function URLAnalyzerForm() {
         <div>
           <button
             type="submit"
-            disabled={!url.trim() || !primaryKeyword.trim() || !secondaryKeyword.trim() || isLoading}
-            className={`flex items-center gap-2 font-medium rounded-md ${
-              url.trim() && primaryKeyword.trim() && secondaryKeyword.trim() && !isLoading
+            disabled={!url.trim() || !primaryKeyword.trim() || !secondaryKeyword.trim() || isLoading || loadingOptions}
+            className={`flex items-center gap-2 font-medium rounded-md border border-[#c5c1c1] p-2  text-[#c5c1c1] ${
+              url.trim() && primaryKeyword.trim() && secondaryKeyword.trim() && industry && pageType && !isLoading && !loadingOptions
                 ? 'bg-[#272b8b] hover:bg-[#272b8b]/80 text-white cursor-pointer py-3 px-6 transition-colors '
                 : 'cursor-not-allowed'
             }`}

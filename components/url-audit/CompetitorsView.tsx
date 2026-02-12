@@ -11,7 +11,6 @@ interface CompetitorsViewProps {
 }
 
 export default function CompetitorsView({ competitors, isLoading, error }: CompetitorsViewProps) {
-     console.log("competitors:",competitors);
   if (isLoading) {
     return (
       <div className="space-y-4">

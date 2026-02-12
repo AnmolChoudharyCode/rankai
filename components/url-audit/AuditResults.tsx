@@ -61,40 +61,19 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
   const [competitorsError, setCompetitorsError] = useState<string | null>(null);
   const competitorsFetchedRef = useRef(false);
   
-  // Cache FAQs for both endpoints
-  const [faqsCache, setFaqsCache] = useState<{ standard: FAQResponse | null; n8n: FAQResponse | null }>({
-    standard: null,
-    n8n: null,
-  });
+  // Cache FAQs
+  const [faqsCache, setFaqsCache] = useState<FAQResponse | null>(null);
   const [faqsLoading, setFaqsLoading] = useState(false);
   const [faqsError, setFaqsError] = useState<string | null>(null);
   const faqsFetchedRef = useRef<Set<string>>(new Set());
-  const faqsCacheRef = useRef<{ standard: FAQResponse | null; n8n: FAQResponse | null }>({
-    standard: null,
-    n8n: null,
-  });
+  const faqsCacheRef = useRef<FAQResponse | null>(null);
 
-  // Cache evaluation for both endpoints
-  const [evaluationCache, setEvaluationCache] = useState<{ standard: EvaluatePageResponse | null; n8n: EvaluatePageResponse | null }>({
-    standard: null,
-    n8n: null,
-  });
+  // Cache evaluation
+  const [evaluationCache, setEvaluationCache] = useState<EvaluatePageResponse | null>(null);
   const [evaluationLoading, setEvaluationLoading] = useState(false);
   const [evaluationError, setEvaluationError] = useState<string | null>(null);
   const evaluationFetchedRef = useRef<Set<string>>(new Set());
-  const evaluationCacheRef = useRef<{ standard: EvaluatePageResponse | null; n8n: EvaluatePageResponse | null }>({
-    standard: null,
-    n8n: null,
-  });
-
-  // n8n toggle state - load from localStorage
-  const [useN8n, setUseN8n] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('useN8n');
-      return saved === 'true';
-    }
-    return false;
-  });
+  const evaluationCacheRef = useRef<EvaluatePageResponse | null>(null);
 
   const tabs = [
     'Summary',
@@ -159,11 +138,10 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
   useEffect(() => {
     // Create a unique key for this fetch based on dependencies
     const baseKey = `${url}-${primaryKeyword}-${secondaryKeyword}`;
-    const fetchKey = `${baseKey}-${useN8n}`;
-    const cacheKey = useN8n ? 'n8n' : 'standard';
+    const fetchKey = `${baseKey}`;
     
-    // Check if we already have cached data for this endpoint
-    if (faqsCacheRef.current[cacheKey]) {
+    // Check if we already have cached data
+    if (faqsCacheRef.current) {
       return; // Already have cached data, no need to fetch
     }
     
@@ -189,14 +167,12 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
           secondaryKeyword: secondaryKeyword.trim(),
         };
         
-        const response = await getFAQs(payload, useN8n);
+        // Always use n8n endpoint
+        const response = await getFAQs(payload, true);
         
         // Cache the result in both state and ref
-        faqsCacheRef.current[cacheKey] = response;
-        setFaqsCache(prev => ({
-          ...prev,
-          [cacheKey]: response,
-        }));
+        faqsCacheRef.current = response;
+        setFaqsCache(response);
         // Clear any previous errors on success
         setFaqsError(null);
       } catch (err) {
@@ -213,29 +189,25 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
         console.error('Error fetching FAQs:', err);
         // Remove from set on error to allow retry
         faqsFetchedRef.current.delete(fetchKey);
-        // Clear cache for this endpoint on error
-        faqsCacheRef.current[cacheKey] = null;
-        setFaqsCache(prev => ({
-          ...prev,
-          [cacheKey]: null,
-        }));
+        // Clear cache on error
+        faqsCacheRef.current = null;
+        setFaqsCache(null);
       } finally {
         setFaqsLoading(false);
       }
     };
 
     fetchFAQs();
-  }, [url, primaryKeyword, secondaryKeyword, useN8n]);
+  }, [url, primaryKeyword, secondaryKeyword]);
 
-  // Fetch AI evaluation - cache results for both endpoints
+  // Fetch AI evaluation
   useEffect(() => {
     // Create a unique key for this fetch based on dependencies
-    const baseKey = `${url}-${primaryKeyword}-${secondaryKeyword}-${geoRegion}`;
-    const fetchKey = `${baseKey}-${useN8n}`;
-    const cacheKey = useN8n ? 'n8n' : 'standard';
+    const baseKey = `${url}-${primaryKeyword}-${secondaryKeyword}-${geoRegion}-${industry}-${pageType}`;
+    const fetchKey = `${baseKey}`;
     
-    // Check if we already have cached data for this endpoint
-    if (evaluationCacheRef.current[cacheKey]) {
+    // Check if we already have cached data
+    if (evaluationCacheRef.current) {
       return; // Already have cached data, no need to fetch
     }
     
@@ -245,7 +217,7 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
     }
 
     const fetchEvaluation = async () => {
-      if (!url || !primaryKeyword || !secondaryKeyword) {
+      if (!url || !primaryKeyword || !secondaryKeyword || !industry || !pageType) {
         return;
       }
 
@@ -258,23 +230,21 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
         const payload: EvaluatePageRequest = {
           page_context: {
             url: url.trim(),
-            page_type: 'Informational',
+            page_type: pageType,
             primary_keyword: primaryKeyword.trim(),
             geo_context: geoRegion || 'India',
-            industry: 'Financial Services',
+            industry: industry,
             score: seoData.geoScore,
           },
           page_content: '',
         };
 
-        const response = await evaluatePage(payload, useN8n);
+        // Always use n8n endpoint
+        const response = await evaluatePage(payload, true);
         
         // Cache the result in both state and ref
-        evaluationCacheRef.current[cacheKey] = response;
-        setEvaluationCache(prev => ({
-          ...prev,
-          [cacheKey]: response,
-        }));
+        evaluationCacheRef.current = response;
+        setEvaluationCache(response);
         // Clear any previous errors on success
         setEvaluationError(null);
       } catch (err) {
@@ -293,19 +263,16 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
         console.error('Error evaluating page:', err);
         // Remove from set on error to allow retry
         evaluationFetchedRef.current.delete(fetchKey);
-        // Clear cache for this endpoint on error
-        evaluationCacheRef.current[cacheKey] = null;
-        setEvaluationCache(prev => ({
-          ...prev,
-          [cacheKey]: null,
-        }));
+        // Clear cache on error
+        evaluationCacheRef.current = null;
+        setEvaluationCache(null);
       } finally {
         setEvaluationLoading(false);
       }
     };
 
     fetchEvaluation();
-  }, [url, primaryKeyword, secondaryKeyword, geoRegion, useN8n]);
+  }, [url, primaryKeyword, secondaryKeyword, geoRegion, industry, pageType, seoData.geoScore]);
 
   // Helper function to map API check status to UI status
   const getStatus = (pass: boolean, severity: string): 'passed' | 'failed' => {
@@ -642,38 +609,6 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
 
         {activeTab === 'AI Recommendations' && (
           <div className="space-y-8">
-            {/* n8n Toggle Switch */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg">
-              <div className="flex items-center gap-3">
-                <label htmlFor="n8n-toggle" className="text-sm font-medium text-gray-700">
-                  Use n8n Endpoints
-                </label>
-                <span className="text-xs text-gray-500">
-                  ({useN8n ? 'n8n' : 'Standard'} endpoints)
-                </span>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={useN8n}
-                onClick={() => {
-                  const newValue = !useN8n;
-                  setUseN8n(newValue);
-                  localStorage.setItem('useN8n', String(newValue));
-                  // No need to reset - cached data will be used if available
-                }}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#272b8b] focus:ring-offset-2 ${
-                  useN8n ? 'bg-[#272b8b]' : 'bg-gray-300'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    useN8n ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-
             {/* AI Fix Banner */}
             {/* <AIFixBanner /> */}
 
@@ -691,7 +626,7 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
             {/* Show Evaluate Page View only when not loading */}
             {!evaluationLoading && (
               <EvaluatePageView
-                data={useN8n ? evaluationCache.n8n : evaluationCache.standard}
+                data={evaluationCache}
                 isLoading={false}
                 error={evaluationError}
               />
@@ -700,8 +635,8 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
             {/* Show FAQs Section only when not loading */}
             {!faqsLoading && (
               <FAQView
-                extractedFaqs={(useN8n ? faqsCache.n8n : faqsCache.standard)?.extractedFaqs || []}
-                generatedFaqs={(useN8n ? faqsCache.n8n : faqsCache.standard)?.generatedFaqs || []}
+                extractedFaqs={faqsCache?.extractedFaqs || []}
+                generatedFaqs={faqsCache?.generatedFaqs || []}
                 isLoading={false}
                 error={faqsError}
               />

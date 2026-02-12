@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import type { EvaluatePageResponse, ParameterScore, VisibilityLevel } from '@/lib/api';
 import { BarChart3, Eye, Sparkles } from 'lucide-react';
 
@@ -15,11 +15,12 @@ function clampScore(score: number) {
   return Math.max(0, Math.min(100, score));
 }
 
-function levelStyles(level: VisibilityLevel) {
+function levelStyles(level: VisibilityLevel | 'Moderate') {
   switch (level) {
     case 'HIGH':
       return { pill: 'bg-green-100 text-green-700 border-green-200', dot: 'bg-green-500' };
     case 'MEDIUM':
+    case 'Moderate':
       return { pill: 'bg-yellow-100 text-yellow-800 border-yellow-200', dot: 'bg-yellow-500' };
     case 'LOW':
     default:
@@ -54,11 +55,22 @@ function ParameterCard({
   onToggle: () => void;
 }) {
   const s = clampScore(item.score);
+  const [showInfo, setShowInfo] = useState(false);
+  const [showBlocks, setShowBlocks] = useState(false);
+
+  // Reset info and blocks visibility when card closes
+  useEffect(() => {
+    if (!isOpen) {
+      setShowInfo(false);
+      setShowBlocks(false);
+    }
+  }, [isOpen]);
+
   return (
     <div
       className={`
-        group overflow-hidden border-2 rounded-2xl transition-all duration-300
-        ${isOpen ? 'border-indigo-600 bg-white shadow-2xl ring-8 ring-indigo-50' : 'border-slate-200 hover:border-indigo-200 bg-white/70 backdrop-blur-sm'}
+        group border-2 rounded-2xl transition-all duration-300
+        ${isOpen ? 'border-[#272b8b] bg-white shadow-xl ring-4 ring-indigo-50' : 'border-slate-200 hover:border-indigo-200 bg-white/70 backdrop-blur-sm'}
       `}
     >
       <button
@@ -68,16 +80,72 @@ function ParameterCard({
         <div
           className={`
             flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-105
-            ${isOpen ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-indigo-50 text-indigo-600'}
+            ${isOpen ? 'bg-[#272b8b] text-white shadow-lg shadow-indigo-200' : 'bg-[#272b8b] text-white'}
           `}
         >
           <BarChart3 size={18} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
+            <div className="min-w-0 flex items-center gap-2">
               <p className="text-sm md:text-base font-bold text-slate-900 truncate">{item.parameter}</p>
-              <p className="text-xs text-slate-500 mt-0.5 font-medium">{isOpen ? 'Tap to collapse' : 'Tap to view details'}</p>
+              {item.info && (
+                <div className="relative flex-shrink-0">
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowInfo(!showInfo);
+                    }}
+                    onMouseEnter={() => setShowInfo(true)}
+                    onMouseLeave={() => {
+                      // Keep tooltip open if card is open and user clicked
+                      if (!isOpen) {
+                        setShowInfo(false);
+                      }
+                    }}
+                    className="w-7 h-7 rounded-full hover:bg-blue-200 text-blue-600 flex items-center justify-center transition-colors cursor-pointer"
+                    title="Parameter information"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowInfo(!showInfo);
+                      }
+                    }}
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                  </span>
+                  {/* Tooltip */}
+                  {showInfo && (
+                    <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-80 z-[9999]">
+                      <div className="bg-slate-900 text-white text-xs rounded-lg shadow-2xl p-3 relative border border-slate-700">
+                        <div className="flex items-start justify-between gap-2 mb-1.5">
+                          <p className="font-semibold text-blue-300 uppercase tracking-wide">About this parameter</p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowInfo(false);
+                            }}
+                            className="text-slate-400 hover:text-white transition-colors flex-shrink-0"
+                            aria-label="Close tooltip"
+                          >
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
+                        <p className="leading-relaxed text-slate-100">{item.info}</p>
+                        {/* Arrow pointing left */}
+                        <div className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-t-[6px] border-b-[6px] border-r-[6px] border-transparent border-r-slate-900"></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className="text-xl font-bold text-slate-900">{s}</span>
@@ -95,6 +163,7 @@ function ParameterCard({
         </div>
       </button>
 
+
       <div
         className="grid overflow-hidden transition-all duration-500 ease-in-out"
         style={{ gridTemplateRows: isOpen ? '1fr' : '0fr', opacity: isOpen ? 1 : 0 }}
@@ -104,8 +173,22 @@ function ParameterCard({
             <p className="text-sm text-slate-600 leading-relaxed font-medium">{item.justification}</p>
 
             {(item.blocking_issues?.length ?? 0) > 0 && (
-              <div className="mt-3">
-                <p className="text-xs font-black text-slate-900 mb-1 uppercase tracking-widest">Blocking issues</p>
+              <div className="mt-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Blocking issues</p>
+                  {(item.blocking_blocks?.length ?? 0) > 0 && (
+                    <button
+                      onClick={() => setShowBlocks(!showBlocks)}
+                      className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-md transition-colors"
+                      title={`${item.blocking_blocks?.length ?? 0} problematic HTML block${(item.blocking_blocks?.length ?? 0) > 1 ? 's' : ''} found`}
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                      </svg>
+                      {showBlocks ? 'Hide Problematic HTML' : `View Problematic HTML `}
+                    </button>
+                  )}
+                </div>
                 <ul className="list-disc ml-5 text-sm text-slate-700 space-y-1">
                   {item.blocking_issues.map((x, idx) => (
                     <li key={idx}>{x}</li>
@@ -114,8 +197,21 @@ function ParameterCard({
               </div>
             )}
 
+            {showBlocks && (item.blocking_blocks?.length ?? 0) > 0 && (
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-xs font-black text-red-900 mb-2 uppercase tracking-widest">Problematic HTML blocks</p>
+                <div className="space-y-2">
+                  {item.blocking_blocks?.map((block, idx) => (
+                    <div key={idx} className="p-2.5 bg-white border border-red-200 rounded text-xs font-mono text-red-900 overflow-x-auto max-h-48 overflow-y-auto">
+                      <code className="whitespace-pre-wrap break-all">{block}</code>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {(item.recommended_fixes?.length ?? 0) > 0 && (
-              <div className="mt-3">
+              <div className="mt-4">
                 <p className="text-xs font-black text-slate-900 mb-1 uppercase tracking-widest">Recommended fixes</p>
                 <ul className="list-disc ml-5 text-sm text-slate-700 space-y-1">
                   {item.recommended_fixes.map((x, idx) => (
@@ -156,19 +252,17 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
   if (!data) return null;
 
   const summary = data.llm_visibility_summary;
-  const level = levelStyles(summary.visibility_level);
-  const overall = clampScore(summary.overall_visibility_score);
 
   return (
     <div className="space-y-8">
       {/* Section Header (match FAQ hero styling) */}
-      <div className="relative overflow-hidden rounded-[32px] bg-slate-900 p-8 md:p-10 shadow-2xl border border-white/10">
+      <div className="relative overflow-hidden rounded-[32px] bg-slate-900 p-8 md:p-10 shadow-xl border border-white/10">
         <div className="absolute top-0 right-0 p-8 opacity-20 pointer-events-none">
           <Eye size={170} className="text-indigo-400 rotate-12" />
         </div>
         <div className="relative z-10 max-w-2xl">
           <div className="flex items-center gap-2 mb-6">
-            <span className="px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-400/20">
+            <span className="px-3 py-1 bg-[#272b8b]0/20 text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-400/20">
               AI Evaluation
             </span>
           </div>
@@ -182,11 +276,11 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
       </div>
 
       {/* Summary */}
-      <div className="bg-gradient-to-br from-indigo-50/30 via-white to-purple-50/30 border-2 border-indigo-100 rounded-[40px] p-6 md:p-10 shadow-xl shadow-indigo-100/10">
+      {/* <div className="bg-gradient-to-br from-indigo-50/30 via-white to-purple-50/30 border-2 border-indigo-100 rounded-[40px] p-6 md:p-10 shadow-xl shadow-indigo-100/10">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-black uppercase tracking-widest bg-indigo-50 text-indigo-700 border-indigo-200">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-black uppercase tracking-widest bg-[#272b8b] text-indigo-700 border-indigo-200">
                 <Sparkles size={14} className="text-indigo-600" />
                 AI Visibility
               </span>
@@ -232,7 +326,7 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
             </div>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Parameter Scores */}
       <div className="space-y-4">

@@ -31,14 +31,14 @@ export default function FAQView({ extractedFaqs, generatedFaqs, isLoading, error
     <div className="space-y-8">
       
       {/* Page Header */}
-      <div className="relative overflow-hidden rounded-[32px] bg-slate-900 p-8 md:p-12 shadow-2xl border border-white/10">
+      <div className="relative overflow-hidden rounded-[32px] bg-slate-900 p-8 md:p-12 shadow-xl border border-white/10">
         <div className="absolute top-0 right-0 p-8 opacity-20 pointer-events-none">
           <Layers size={180} className="text-indigo-400 rotate-12" />
         </div>
         
         <div className="relative z-10 max-w-2xl">
           <div className="flex items-center gap-2 mb-6">
-            <span className="px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-400/20">
+            <span className="px-3 py-1 bg-[#272b8b]0/20 text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-widest border border-[#272b8b]">
               Content Strategy
             </span>
           </div>
@@ -98,14 +98,14 @@ export default function FAQView({ extractedFaqs, generatedFaqs, isLoading, error
           <div className="bg-gradient-to-br from-indigo-50/30 via-white to-purple-50/30 border-2 border-indigo-100 rounded-[40px] p-6 md:p-10 shadow-xl shadow-indigo-100/10 h-full">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
               <div className="flex items-center gap-5">
-                <div className="w-16 h-16 bg-indigo-600 rounded-[24px] flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                <div className="w-16 h-16 bg-[#272b8b] rounded-[24px] flex items-center justify-center text-white shadow-lg shadow-indigo-200">
                   <Zap size={32} />
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-slate-900 tracking-tight">AI Suggestions</h2>
                   <div className="flex items-center gap-2 mt-1">
-                    <Sparkles size={14} className="text-indigo-600" />
-                    <span className="text-indigo-600 text-xs font-black uppercase tracking-widest">Optimized Content</span>
+                    <Sparkles size={14} className="text-[#272b8b]" />
+                    <span className="text-[#272b8b]  text-xs font-black uppercase tracking-widest">Optimized Content</span>
                   </div>
                 </div>
               </div>

@@ -49,7 +49,6 @@ export async function apiCall<T>(
   // Handle 204 No Content responses
   if (response.status === 204) {
     console.error('API returned empty response (204 No Content)');
-    throw new Error('No data available. Please try again later.');
   }
   
   // Get response text first (can only read once)
@@ -58,7 +57,6 @@ export async function apiCall<T>(
   // Check if response is empty
   if (!text || text.trim().length === 0) {
     console.error('API returned empty response');
-    throw new Error('No data received. Please try again later.');
   }
   
   // Check content type if available
@@ -94,7 +92,6 @@ export async function backendCall<T>(
   // Handle 204 No Content responses
   if (response.status === 204) {
     console.error('API returned empty response (204 No Content)');
-    throw new Error('No data available. Please try again later.');
   }
   
   // Get response text first (can only read once)
@@ -103,7 +100,6 @@ export async function backendCall<T>(
   // Check if response is empty
   if (!text || text.trim().length === 0) {
     console.error('API returned empty response');
-    throw new Error('No data received. Please try again later.');
   }
   
   // Check content type if available
@@ -367,21 +363,22 @@ export async function getFAQs(
 export type VisibilityLevel = 'LOW' | 'MEDIUM' | 'HIGH';
 
 export interface LLMVisibilitySummary {
-  overall_visibility_score: number;
   visibility_level: VisibilityLevel;
   primary_blockers: string[];
 }
 
 export interface ParameterScore {
   parameter: string;
+  info?: string;
   score: number;
   justification: string;
   blocking_issues: string[];
+  blocking_blocks?: string[];
   recommended_fixes: string[];
 }
 
 export interface CitationConfidence {
-  current_state: 'LOW' | 'MEDIUM' | 'HIGH';
+  current_state: 'LOW' | 'MEDIUM' | 'HIGH' | 'Moderate';
   why_or_why_not: string;
   what_would_improve_it: string[];
 }
@@ -392,7 +389,7 @@ export interface RecommendedNextActions {
 }
 
 export interface EvaluatePageResponse {
-  llm_visibility_summary: LLMVisibilitySummary;
+  llm_visibility_summary?: LLMVisibilitySummary;
   parameter_scores: ParameterScore[];
   citation_confidence: CitationConfidence;
   recommended_next_actions: RecommendedNextActions;
@@ -424,6 +421,26 @@ export async function evaluatePage(
   return backendCall<EvaluatePageResponse>(endpoint, {
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Get Industries API call
+ * Endpoint: /audit/industries
+ */
+export async function getIndustries(): Promise<string[]> {
+  return backendCall<string[]>('/audit/industries', {
+    method: 'GET',
+  });
+}
+
+/**
+ * Get Page Types API call
+ * Endpoint: /audit/page-type
+ */
+export async function getPageTypes(): Promise<string[]> {
+  return backendCall<string[]>('/audit/page-type', {
+    method: 'GET',
   });
 }
 
