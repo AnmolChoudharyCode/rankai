@@ -368,7 +368,7 @@ export default function URLAnalyzerForm() {
             type="submit"
             disabled={!url.trim() || !primaryKeyword.trim() || !secondaryKeyword.trim() || isLoading || loadingOptions}
             className={`flex items-center gap-2 font-medium rounded-md border border-[#c5c1c1] p-2  text-[#c5c1c1] ${
-              url.trim() && primaryKeyword.trim() && secondaryKeyword.trim() && industry && pageType && !isLoading && !loadingOptions
+              url.trim() && primaryKeyword.trim() && secondaryKeyword.trim() && !isLoading && !loadingOptions
                 ? 'bg-[#272b8b] hover:bg-[#272b8b]/80 text-white cursor-pointer py-3 px-6 transition-colors '
                 : 'cursor-not-allowed'
             }`}

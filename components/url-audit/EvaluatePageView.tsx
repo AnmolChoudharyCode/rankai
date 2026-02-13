@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import type { EvaluatePageResponse, ParameterScore, VisibilityLevel } from '@/lib/api';
-import { BarChart3, Eye, Sparkles } from 'lucide-react';
+import type { EvaluatePageResponse, ParameterScore} from '@/lib/api';
+import { BarChart3, Eye } from 'lucide-react';
 
 interface EvaluatePageViewProps {
   data: EvaluatePageResponse | null;
@@ -20,12 +20,12 @@ function clampParameterScore(score: number) {
   return Math.max(0, Math.min(10, score));
 }
 
-function levelStyles(level: VisibilityLevel) {
+function levelStyles(level: 'LOW' | 'MEDIUM' | 'HIGH' | 'Moderate') {
   switch (level) {
     case 'HIGH':
       return { pill: 'bg-green-100 text-green-700 border-green-200', dot: 'bg-green-500' };
     case 'MEDIUM':
-    // case 'Moderate':
+    case 'Moderate':
       return { pill: 'bg-yellow-100 text-yellow-800 border-yellow-200', dot: 'bg-yellow-500' };
     case 'LOW':
     default:
@@ -49,7 +49,7 @@ function parameterScoreColor(score: number) {
 
 function SectionHeader({ title }: { title: string }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
       <div>
         <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{title}</h2>
       </div>
@@ -66,7 +66,7 @@ function ParameterCard({
   isOpen: boolean;
   onToggle: () => void;
 }) {
-  const s = clampScore(item.score);
+  const s = clampParameterScore(item.score);
   const [showInfo, setShowInfo] = useState(false);
   const [showBlocks, setShowBlocks] = useState(false);
 
@@ -87,11 +87,12 @@ function ParameterCard({
     >
       <button
         onClick={onToggle}
-        className="w-full cursor-pointer touch-manipulation px-4 sm:px-5 py-4 flex items-start gap-3 sm:gap-4 text-left transition-all"
+        className="w-full cursor-pointer px-4 sm:px-5 py-4 flex items-start gap-3 sm:gap-4 text-left transition-all"
+        style={{ touchAction: 'manipulation' }}
       >
         <div
           className={`
-            flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-105
+            flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-110
             ${isOpen ? 'bg-[#272b8b] text-white shadow-lg shadow-indigo-200' : 'bg-[#272b8b] text-white'}
           `}
         >
@@ -169,7 +170,7 @@ function ParameterCard({
           </div>
           <div className="mt-3">
             <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-              <div className={`h-2 ${parameterScoreColor(s)} rounded-full transition-all duration-500`} style={{ width: `${percentage}%` }} />
+              <div className={`h-2 ${parameterScoreColor(s)} rounded-full transition-all duration-500`} style={{ width: `${s * 10}%` }} />
             </div>
           </div>
         </div>
@@ -197,7 +198,7 @@ function ParameterCard({
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                       </svg>
-                      {showBlocks ? 'Hide Problematic HTML' : `View Problematic HTML `}
+                      {showBlocks ? 'Hide Problematic HTML' : 'View Problematic HTML'}
                     </button>
                   )}
                 </div>
@@ -263,8 +264,6 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
 
   if (!data) return null;
 
-  const summary = data.llm_visibility_summary;
-
   return (
     <div className="space-y-8">
       {/* Section Header (match FAQ hero styling) */}
@@ -274,7 +273,7 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
         </div>
         <div className="relative z-10 max-w-2xl">
           <div className="flex items-center gap-2 mb-6">
-            <span className="px-3 py-1 bg-[#272b8b]0/20 text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-400/20">
+            <span className="px-3 py-1 bg-[#272b8b]/20 text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-400/20">
               AI Evaluation
             </span>
           </div>
@@ -360,9 +359,15 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
         <div className="bg-slate-50 border border-slate-200 rounded-[32px] p-6 md:p-8">
           <SectionHeader title="Citation confidence" />
           <div className="mt-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-black uppercase tracking-widest bg-white text-slate-700 border-slate-200">
-              {data.citation_confidence.current_state}
-            </div>
+            {(() => {
+              const level = levelStyles(data.citation_confidence.current_state);
+              return (
+                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-black uppercase tracking-widest ${level.pill}`}>
+                  <span className={`w-2 h-2 rounded-full ${level.dot}`} />
+                  {data.citation_confidence.current_state}
+                </div>
+              );
+            })()}
             <p className="text-sm text-slate-700 leading-relaxed mt-4 font-medium">{data.citation_confidence.why_or_why_not}</p>
             {(data.citation_confidence.what_would_improve_it?.length ?? 0) > 0 && (
               <div className="mt-4">

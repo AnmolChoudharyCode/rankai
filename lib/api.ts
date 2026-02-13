@@ -360,10 +360,9 @@ export async function getFAQs(
 /**
  * AI Recommendations - Evaluate Page (LLM visibility) API
  */
-export type VisibilityLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+// export type VisibilityLevel = 'LOW' | 'MEDIUM' | 'HIGH';
 
 export interface LLMVisibilitySummary {
-  visibility_level: VisibilityLevel;
   primary_blockers: string[];
 }
 
