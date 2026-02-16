@@ -116,7 +116,7 @@ function ParameterCard({
                         setShowInfo(false);
                       }
                     }}
-                    className="w-7 h-7 rounded-full hover:bg-blue-200 text-blue-600 flex items-center justify-center transition-colors cursor-pointer"
+                    className="w-7 h-7 rounded-full hover:bg-blue-200 text-[#272b8b] flex items-center justify-center transition-colors cursor-pointer"
                     title="Parameter information"
                     role="button"
                     tabIndex={0}
