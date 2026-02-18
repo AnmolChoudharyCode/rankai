@@ -44,7 +44,7 @@ export default function FAQView({ competitorFaqs, existingFaqs, recommendedCurre
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tight">
-            FAQ <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-400 to-purple-400">Optimization</span>
+            FAQ <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Optimization</span>
           </h1>
           <p className="text-slate-300 text-lg leading-relaxed font-medium">
             Review existing competitor patterns and implement AI-generated suggestions to improve your search visibility.
@@ -54,10 +54,11 @@ export default function FAQView({ competitorFaqs, existingFaqs, recommendedCurre
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-10">
         
-        {/* LEFT COLUMN: COMPETITOR RESEARCH */}
-        <div className="xl:col-span-5">
-          <div className="bg-slate-50 border border-slate-200 rounded-[32px] p-6 md:p-8 h-full">
-            <div className="flex items-center gap-4 mb-8">
+        {/* LEFT COLUMN: COMPETITOR & EXISTING FAQs */}
+        <div className="xl:col-span-6 space-y-6">
+          {/* COMPETITOR FAQs SECTION */}
+          <div className="bg-slate-50 border border-slate-200 rounded-[32px] p-6 md:p-8">
+            <div className="flex items-center gap-4 mb-6">
               <div className="w-12 h-12 bg-white border border-slate-200 rounded-2xl flex items-center justify-center text-slate-600 shadow-sm">
                 <Target size={24} />
               </div>
@@ -101,10 +102,6 @@ export default function FAQView({ competitorFaqs, existingFaqs, recommendedCurre
               </div>
             )}
           </div>
-        </div>
-
-        {/* RIGHT COLUMN: EXISTING & RECOMMENDED FAQs */}
-        <div className="xl:col-span-7 space-y-6">
 
           {/* EXISTING FAQs SECTION */}
           <div className="bg-white border-2 border-slate-200 rounded-[32px] p-6 md:p-8 shadow-lg">
@@ -135,7 +132,7 @@ export default function FAQView({ competitorFaqs, existingFaqs, recommendedCurre
                   />
                 ))
               ) : (
-                <div className="text-center py-10 text-slate-400">
+                <div className="text-center py-12 text-slate-400">
                   <FileText size={32} className="mx-auto mb-3 opacity-50" />
                   <p className="text-sm font-medium">No existing FAQs found</p>
                   <p className="text-xs mt-1 text-slate-400">No FAQs detected on your current page</p>
@@ -143,10 +140,14 @@ export default function FAQView({ competitorFaqs, existingFaqs, recommendedCurre
               )}
             </div>
           </div>
+        </div>
+
+        {/* RIGHT COLUMN: RECOMMENDED FAQs */}
+        <div className="xl:col-span-6 space-y-6">
           
           {/* RECOMMENDED CURRENT FAQ SECTION */}
           {recommendedCurrentFaq && recommendedCurrentFaq.length > 0 && (
-            <div className="bg-linear-to-br from-green-50/50 via-white to-emerald-50/30 border-2 border-green-200 rounded-[32px] p-6 md:p-8 shadow-lg">
+            <div className="bg-gradient-to-br from-green-50/50 via-white to-emerald-50/30 border-2 border-green-200 rounded-[32px] p-6 md:p-8 shadow-lg">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-12 h-12 bg-green-100 border border-green-200 rounded-2xl flex items-center justify-center text-green-700 shadow-sm">
                   <CheckCircle size={24} />
@@ -176,7 +177,7 @@ export default function FAQView({ competitorFaqs, existingFaqs, recommendedCurre
           )}
 
           {/* RECOMMENDED FAQs SECTION */}
-          <div className="bg-linear-to-br from-indigo-50/30 via-white to-purple-50/30 border-2 border-indigo-100 rounded-[40px] p-6 md:p-10 shadow-xl shadow-indigo-100/10">
+          <div className="bg-gradient-to-br from-indigo-50/30 via-white to-purple-50/30 border-2 border-indigo-100 rounded-[32px] p-6 md:p-8 shadow-xl shadow-indigo-100/10">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
               <div className="flex items-center gap-5 w-full">
                 <div className="w-16 h-16 bg-[#272b8b] rounded-[24px] flex items-center justify-center text-white shadow-lg shadow-indigo-200">

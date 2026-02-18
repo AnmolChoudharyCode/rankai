@@ -134,7 +134,7 @@ function ParameterCard({
                   </span>
                   {/* Tooltip */}
                   {showInfo && (
-                    <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-96 min-h-[200px] z-[9999] pointer-events-auto">
+                    <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-80 md:w-96 min-h-[200px] z-[9999] pointer-events-auto">
                       <div className="bg-slate-900 text-white text-xs rounded-lg shadow-2xl p-3 relative border border-slate-700">
                         <div className="flex items-start justify-between gap-2 mb-1.5">
                           <p className="font-semibold text-blue-300 uppercase tracking-wide">About this parameter</p>
@@ -282,7 +282,7 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
         </div>
         <div className="relative z-10 max-w-2xl">
           <div className="flex items-center gap-2 mb-6">
-            <span className="px-3 py-1 bg-[#272b8b]/20 text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-400/20">
+            <span className="px-3 py-1 bg-[#272b8b]/20 text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-widest border border-[#272b8b]">
               AI Evaluation
             </span>
           </div>
@@ -349,9 +349,9 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
       </div> */}
 
       {/* Parameter Scores */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         <SectionHeader title="Parameter scores" />
-        <div className="grid grid-cols-1 gap-3 overflow-visible">
+        <div className="grid grid-cols-1 gap-4 overflow-visible">
           {sortedParams.map((p, idx) => (
             <ParameterCard
               key={`${p.parameter}-${idx}`}
@@ -365,9 +365,9 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
 
       {/* Deep-dive boxes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-slate-50 border border-slate-200 rounded-[32px] p-6 md:p-8">
+        <div className="bg-slate-50 border border-slate-200 rounded-[32px] p-6 md:p-8 shadow-sm">
           <SectionHeader title="Citation confidence" />
-          <div className="mt-4">
+          <div className="mt-6">
             {(() => {
               const level = levelStyles(data.citation_confidence.current_state);
               return (
@@ -391,9 +391,9 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
           </div>
         </div>
 
-        <div className="bg-slate-50 border border-slate-200 rounded-[32px] p-6 md:p-8">
+        <div className="bg-slate-50 border border-slate-200 rounded-[32px] p-6 md:p-8 shadow-sm">
           <SectionHeader title="Recommended next actions" />
-          <div className="mt-4 space-y-5">
+          <div className="mt-6 space-y-5">
             {(data.recommended_next_actions.quick_wins?.length ?? 0) > 0 && (
               <div>
                 <p className="text-xs font-black text-slate-900 mb-2 uppercase tracking-widest">Quick wins</p>

@@ -46,9 +46,9 @@ const Accordion: React.FC<AccordionProps> = ({ faq, type, isOpenByDefault = fals
         chevron: 'bg-slate-200 text-slate-500'
       }
     : {
-        border: 'border-white hover:border-[#272b8b]',
+        border: 'border-indigo-100 hover:border-indigo-300',
         active: 'border border-[#272b8b] bg-white shadow-xl ring-2 ring-indigo-50',
-        icon: 'bg-[#272b8b] text-[#272b8b]-600',
+        icon: 'bg-[#272b8b] text-white',
         chevron: 'bg-[#272b8b] text-white'
       };
 
@@ -73,7 +73,7 @@ const Accordion: React.FC<AccordionProps> = ({ faq, type, isOpenByDefault = fals
         {/* Content Section */}
         <div className="flex-1 min-w-0 pr-4">
             <span className={`
-            block font-bold leading-tight transition-colors duration-300
+            block font-semibold leading-tight transition-colors duration-300
             ${isCompetitor ? 'text-sm text-slate-700' : isExisting ? 'text-sm text-slate-700' : 'text-base md:text-lg text-slate-900'}
             ${isOpen ? 'text-slate-900' : ''}
           `}>
@@ -95,7 +95,7 @@ const Accordion: React.FC<AccordionProps> = ({ faq, type, isOpenByDefault = fals
         ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}
       `}>
         <div className="overflow-hidden">
-          <div className="px-5 pb-6 pt-2 ml-[56px] border-t border-slate-50 mt-2">
+          <div className="px-5 pb-6 pt-2 ml-[56px] border-t border-slate-100 mt-2">
             <p className={`
               text-slate-600 leading-relaxed font-medium mb-6
               ${isCompetitor || isExisting ? 'text-sm' : 'text-[15px] md:text-base'}
@@ -104,16 +104,16 @@ const Accordion: React.FC<AccordionProps> = ({ faq, type, isOpenByDefault = fals
             </p>
 
             {/* Action Bar */}
-            <div className="flex items-center gap-2 pt-4 border-t border-slate-50">
+            <div className="flex items-center gap-2 pt-4 border-t border-slate-100">
               <button 
                 onClick={handleCopy}
                 className={`
-                  flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all
-                  ${isCompetitor || isExisting ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-slate-900 text-white hover:bg-slate-800'}
+                  flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all duration-200
+                  ${isCompetitor || isExisting ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95' : 'bg-slate-900 text-white hover:bg-slate-800 active:scale-95'}
                 `}
               >
-                {isCopied ? <CheckCircle2 size={14} /> : <Copy size={14} />}
-                {isCopied ? 'Copied' : 'Copy Question & Answer'}
+                {isCopied ? <CheckCircle2 size={14} className="text-green-600" /> : <Copy size={14} />}
+                {isCopied ? 'Copied!' : 'Copy Question & Answer'}
               </button>
             </div>
           </div>
