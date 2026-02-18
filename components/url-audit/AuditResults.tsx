@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import ScoreCard from './ScoreCard';
 import StatusSummaryBox from './StatusSummaryBox';
 import SEOCheckItem from './SEOCheckItem';
@@ -136,144 +136,159 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
     fetchCompetitors();
   }, [url, primaryKeyword, secondaryKeyword]);
 
-  useEffect(() => {
-    // Create a unique key for this fetch based on dependencies
+  // Extract FAQ fetch function for reuse (including retry)
+  const fetchFAQs = useCallback(async (forceRetry = false) => {
+    if (!url || !primaryKeyword || !secondaryKeyword) {
+      return;
+    }
+
     const baseKey = `${url}-${primaryKeyword}-${secondaryKeyword}`;
     const fetchKey = `${baseKey}`;
-    
-    // Check if we already have cached data
-    if (faqsCacheRef.current) {
-      return; // Already have cached data, no need to fetch
-    }
-    
 
-    if (faqsFetchedRef.current.has(fetchKey)) {
-      return;
-    }
-
-    const fetchFAQs = async () => {
-      if (!url || !primaryKeyword || !secondaryKeyword) {
+    // Skip if already fetching and not a forced retry
+    if (!forceRetry) {
+      if (faqsCacheRef.current) {
+        return; // Already have cached data, no need to fetch
+      }
+      if (faqsFetchedRef.current.has(fetchKey)) {
         return;
       }
+    }
 
-      // Mark as fetching for this combination
-      faqsFetchedRef.current.add(fetchKey);
-      setFaqsLoading(true);
+    // Clear cache and error on retry
+    if (forceRetry) {
+      faqsCacheRef.current = null;
+      setFaqsCache(null);
+      faqsFetchedRef.current.delete(fetchKey);
       setFaqsError(null);
-      
-      try {
-        const payload = {
-          url: url.trim(),
-          primaryKeyword: primaryKeyword.trim(),
-          secondaryKeyword: secondaryKeyword.trim(),
-        };
-        
-        // Always use n8n endpoint
-        const response = await getFAQs(payload, true);
-        
-        // Cache the result in both state and ref
-        faqsCacheRef.current = response;
-        setFaqsCache(response);
-        // Clear any previous errors on success
-        setFaqsError(null);
-      } catch (err) {
-        const errorMessage = err instanceof Error 
-          ? err.message 
-          : 'Unable to load FAQ recommendations. Please try again later.';
-        
-        let userFriendlyMessage = errorMessage;
-        if (errorMessage.includes('Failed to fetch') || errorMessage.includes('network') || errorMessage.includes('Network')) {
-          userFriendlyMessage = 'Connection error. Please check your internet connection and try again.';
-        }
-        
-        setFaqsError(userFriendlyMessage);
-        console.error('Error fetching FAQs:', err);
-        // Remove from set on error to allow retry
-        faqsFetchedRef.current.delete(fetchKey);
-        // Clear cache on error
-        faqsCacheRef.current = null;
-        setFaqsCache(null);
-      } finally {
-        setFaqsLoading(false);
-      }
-    };
+    }
 
-    fetchFAQs();
+    // Mark as fetching for this combination
+    faqsFetchedRef.current.add(fetchKey);
+    setFaqsLoading(true);
+    setFaqsError(null);
+    
+    try {
+      const payload = {
+        url: url.trim(),
+        primaryKeyword: primaryKeyword.trim(),
+        secondaryKeyword: secondaryKeyword.trim(),
+      };
+      
+      // Always use n8n endpoint
+      const response = await getFAQs(payload, true);
+      
+      // Cache the result in both state and ref
+      faqsCacheRef.current = response;
+      setFaqsCache(response);
+      // Clear any previous errors on success
+      setFaqsError(null);
+    } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'Unable to load FAQ recommendations. Please try again later.';
+      
+      let userFriendlyMessage = errorMessage;
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('network') || errorMessage.includes('Network')) {
+        userFriendlyMessage = 'Connection error. Please check your internet connection and try again.';
+      }
+      
+      setFaqsError(userFriendlyMessage);
+      console.error('Error fetching FAQs:', err);
+      // Remove from set on error to allow retry
+      faqsFetchedRef.current.delete(fetchKey);
+      // Clear cache on error
+      faqsCacheRef.current = null;
+      setFaqsCache(null);
+    } finally {
+      setFaqsLoading(false);
+    }
   }, [url, primaryKeyword, secondaryKeyword]);
 
-  // Fetch AI evaluation
   useEffect(() => {
-    // Create a unique key for this fetch based on dependencies
-    const baseKey = `${url}-${primaryKeyword}-${secondaryKeyword}-${geoRegion}-${industry}-${pageType}`;
-    const fetchKey = `${baseKey}`;
-    
-    // Check if we already have cached data
-    if (evaluationCacheRef.current) {
-      return; // Already have cached data, no need to fetch
-    }
-    
-    // Check if we've already fetched for this combination
-    if (evaluationFetchedRef.current.has(fetchKey)) {
+    fetchFAQs(false);
+  }, [fetchFAQs]);
+
+  // Extract evaluation fetch function for reuse (including retry)
+  const fetchEvaluation = useCallback(async (forceRetry = false) => {
+    if (!url || !primaryKeyword || !secondaryKeyword) {
       return;
     }
 
-    const fetchEvaluation = async () => {
-      if (!url || !primaryKeyword || !secondaryKeyword) {
+    const baseKey = `${url}-${primaryKeyword}-${secondaryKeyword}-${geoRegion}-${industry}-${pageType}`;
+    const fetchKey = `${baseKey}`;
+
+    // Skip if already fetching and not a forced retry
+    if (!forceRetry) {
+      if (evaluationCacheRef.current) {
+        return; // Already have cached data, no need to fetch
+      }
+      if (evaluationFetchedRef.current.has(fetchKey)) {
         return;
       }
+    }
 
-      // Mark as fetching for this combination
-      evaluationFetchedRef.current.add(fetchKey);
-      setEvaluationLoading(true);
+    // Clear cache and error on retry
+    if (forceRetry) {
+      evaluationCacheRef.current = null;
+      setEvaluationCache(null);
+      evaluationFetchedRef.current.delete(fetchKey);
       setEvaluationError(null);
+    }
 
-      try {
-        const payload: EvaluatePageRequest = {
-          page_context: {
-            url: url.trim(),
-            page_type: pageType || 'general',
-            primary_keyword: primaryKeyword.trim(),
-            geo_context: geoRegion || 'India',
-            industry: industry || 'general',
-            score: seoData.geoScore,
-          },
-          page_content: '',
-        };
+    // Mark as fetching for this combination
+    evaluationFetchedRef.current.add(fetchKey);
+    setEvaluationLoading(true);
+    setEvaluationError(null);
 
-        // Always use n8n endpoint
-        const response = await evaluatePage(payload, true);
-        
-        // Cache the result in both state and ref
-        evaluationCacheRef.current = response;
-        setEvaluationCache(response);
-        // Clear any previous errors on success
-        setEvaluationError(null);
-      } catch (err) {
-        const errorMessage = err instanceof Error 
-          ? err.message 
-          : 'Unable to evaluate page. Please try again later.';
-        
-        // Use the error message directly (already user-friendly from API layer)
-        // Only override for network-specific errors
-        let userFriendlyMessage = errorMessage;
-        if (errorMessage.includes('Failed to fetch') || errorMessage.includes('network') || errorMessage.includes('Network')) {
-          userFriendlyMessage = 'Connection error. Please check your internet connection and try again.';
-        }
-        
-        setEvaluationError(userFriendlyMessage);
-        console.error('Error evaluating page:', err);
-        // Remove from set on error to allow retry
-        evaluationFetchedRef.current.delete(fetchKey);
-        // Clear cache on error
-        evaluationCacheRef.current = null;
-        setEvaluationCache(null);
-      } finally {
-        setEvaluationLoading(false);
+    try {
+      const payload: EvaluatePageRequest = {
+        page_context: {
+          url: url.trim(),
+          page_type: pageType || 'general',
+          primary_keyword: primaryKeyword.trim(),
+          geo_context: geoRegion || 'India',
+          industry: industry || 'general',
+          score: seoData.geoScore,
+        },
+        page_content: '',
+      };
+
+      // Always use n8n endpoint
+      const response = await evaluatePage(payload, true);
+      
+      // Cache the result in both state and ref
+      evaluationCacheRef.current = response;
+      setEvaluationCache(response);
+      // Clear any previous errors on success
+      setEvaluationError(null);
+    } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'Unable to evaluate page. Please try again later.';
+      
+      // Use the error message directly (already user-friendly from API layer)
+      // Only override for network-specific errors
+      let userFriendlyMessage = errorMessage;
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('network') || errorMessage.includes('Network')) {
+        userFriendlyMessage = 'Connection error. Please check your internet connection and try again.';
       }
-    };
-
-    fetchEvaluation();
+      
+      setEvaluationError(userFriendlyMessage);
+      console.error('Error evaluating page:', err);
+      // Remove from set on error to allow retry
+      evaluationFetchedRef.current.delete(fetchKey);
+      // Clear cache on error
+      evaluationCacheRef.current = null;
+      setEvaluationCache(null);
+    } finally {
+      setEvaluationLoading(false);
+    }
   }, [url, primaryKeyword, secondaryKeyword, geoRegion, industry, pageType, seoData.geoScore]);
+
+  useEffect(() => {
+    fetchEvaluation(false);
+  }, [fetchEvaluation]);
 
   // Helper function to map API check status to UI status
   const getStatus = (pass: boolean, severity: string): 'passed' | 'failed' => {
@@ -636,17 +651,51 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
               </div>
             )}
 
-            {/* Show Evaluate Page View only when not loading */}
-            {!evaluationLoading && (
+            {/* Combined Error State - Both APIs Failed */}
+            {!evaluationLoading && !faqsLoading && evaluationError && faqsError && (
+              <div className="p-6 bg-red-50 border-2 border-red-200 rounded-[32px] shadow-sm">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                    <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-bold text-red-900 mb-1">AI Recommendations Failed</h3>
+                    <p className="text-sm text-red-700 mb-2">Both LLM evaluation and FAQ recommendations failed to load.</p>
+                    <div className="space-y-1 mb-4">
+                      <p className="text-xs text-red-600">• LLM Visibility: {evaluationError}</p>
+                      <p className="text-xs text-red-600">• FAQ Recommendations: {faqsError}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        fetchEvaluation(true);
+                        fetchFAQs(true);
+                      }}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors duration-200"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Retry All
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Show Evaluate Page View only when not loading and not both failed */}
+            {!evaluationLoading && !(evaluationError && faqsError) && (
               <EvaluatePageView
                 data={evaluationCache}
                 isLoading={false}
                 error={evaluationError}
+                onRetry={() => fetchEvaluation(true)}
               />
             )}
 
-            {/* Show FAQs Section only when not loading */}
-            {!faqsLoading && (
+            {/* Show FAQs Section only when not loading and not both failed */}
+            {!faqsLoading && !(evaluationError && faqsError) && (
               <FAQView
                 competitorFaqs={faqsCache?.competitor_faqs || []}
                 existingFaqs={faqsCache?.existing_faqs || []}
@@ -654,6 +703,7 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
                 recommendedFaqs={faqsCache?.recommended_faqs || []}
                 isLoading={false}
                 error={faqsError}
+                onRetry={() => fetchFAQs(true)}
               />
             )}
           </div>
