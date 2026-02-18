@@ -218,7 +218,7 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
     }
 
     const fetchEvaluation = async () => {
-      if (!url || !primaryKeyword || !secondaryKeyword || !industry || !pageType) {
+      if (!url || !primaryKeyword || !secondaryKeyword) {
         return;
       }
 
@@ -231,10 +231,10 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
         const payload: EvaluatePageRequest = {
           page_context: {
             url: url.trim(),
-            page_type: pageType,
+            page_type: pageType || 'general',
             primary_keyword: primaryKeyword.trim(),
             geo_context: geoRegion || 'India',
-            industry: industry,
+            industry: industry || 'general',
             score: seoData.geoScore,
           },
           page_content: '',

@@ -81,7 +81,7 @@ function ParameterCard({
   return (
     <div
       className={`
-        group border-2 rounded-2xl transition-all duration-300
+        group border-2 rounded-2xl transition-all duration-300 overflow-visible
         ${isOpen ? 'border-[#272b8b] bg-white shadow-xl ring-4 ring-indigo-50' : 'border-slate-200 hover:border-indigo-200 bg-white/70 backdrop-blur-sm'}
       `}
     >
@@ -103,7 +103,7 @@ function ParameterCard({
             <div className="min-w-0 flex items-center gap-2">
               <p className="text-sm md:text-base font-bold text-slate-900 truncate">{item.parameter}</p>
               {item.info && (
-                <div className="relative flex-shrink-0">
+                <div className="relative flex-shrink-0 z-10">
                   <span
                     onClick={(e) => {
                       e.stopPropagation();
@@ -134,7 +134,7 @@ function ParameterCard({
                   </span>
                   {/* Tooltip */}
                   {showInfo && (
-                    <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-80 z-[9999]">
+                    <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-96 min-h-[200px] z-[9999] pointer-events-auto">
                       <div className="bg-slate-900 text-white text-xs rounded-lg shadow-2xl p-3 relative border border-slate-700">
                         <div className="flex items-start justify-between gap-2 mb-1.5">
                           <p className="font-semibold text-blue-300 uppercase tracking-wide">About this parameter</p>
@@ -351,7 +351,7 @@ export default function EvaluatePageView({ data, isLoading, error }: EvaluatePag
       {/* Parameter Scores */}
       <div className="space-y-4">
         <SectionHeader title="Parameter scores" />
-        <div className="grid grid-cols-1 gap-3">
+        <div className="grid grid-cols-1 gap-3 overflow-visible">
           {sortedParams.map((p, idx) => (
             <ParameterCard
               key={`${p.parameter}-${idx}`}
