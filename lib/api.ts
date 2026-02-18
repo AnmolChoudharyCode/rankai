@@ -335,10 +335,10 @@ export async function getSEOIssuesHistory(): Promise<SEOHistoryResponse> {
  * FAQs API
  */
 export interface FAQResponse {
-  extractedFaqs: FAQItem[];
-  generatedFaqs: FAQItem[];
-  totalExtracted: number;
-  totalGenerated: number;
+  competitor_faqs: FAQItem[];
+  existing_faqs: FAQItem[];
+  recommended_current_faq: FAQItem[];
+  recommended_faqs: FAQItem[];
 }
 
 /**

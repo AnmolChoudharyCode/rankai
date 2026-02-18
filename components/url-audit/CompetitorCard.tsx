@@ -17,9 +17,10 @@ export default function CompetitorCard({
   geoScore
 }: CompetitorCardProps) {
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'bg-green-500';
-    if (score >= 85) return 'bg-orange-500';
-    return 'bg-orange-400';
+    // Softer red/yellow/green semantics (match LLM evaluation styling)
+    if (score >= 85) return 'bg-green-400';
+    if (score >= 70) return 'bg-yellow-400';
+    return 'bg-red-400';
   };
 
   return (

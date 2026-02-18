@@ -11,6 +11,7 @@ import CompetitorsView from './CompetitorsView';
 import ScoreGauge from './ScoreGauge';
 import FAQView from './FAQView';
 import EvaluatePageView from './EvaluatePageView';
+import { Loader2, Sparkles } from 'lucide-react';
 import {
   SEOIssuesResponse,
   RawHTMLResponse,
@@ -614,10 +615,22 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
 
             {/* Unified Loading Banner - Show ONLY when either is loading */}
             {(evaluationLoading || faqsLoading) && (
-              <div className="relative overflow-hidden rounded-[32px] bg-[#F5F5F5] p-4 md:p-6 shadow-xl border border-white/10 mb-8">
-                <div className="relative z-10 flex items-center gap-4">
-                  <div className="flex-1">
-                    <h3 className="text-xl md:text-2xl font-normal text-black text-center">Evaluating...</h3>
+              <div className="relative overflow-hidden rounded-[32px] bg-white p-5 md:p-6 shadow-sm border border-slate-200 mb-8">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="min-w-0">
+                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-[11px] font-black uppercase tracking-widest">
+                      <Sparkles size={14} />
+                      Working
+                    </span>
+                    <h3 className="mt-3 text-lg md:text-xl font-extrabold text-slate-900 tracking-tight">
+                      Evaluating…
+                    </h3>
+                
+                  </div>
+
+                  <div className="flex items-center gap-2 text-slate-700">
+                    <Loader2 size={18} className="animate-spin text-indigo-600" />
+                    <span className="text-sm font-semibold">In progress</span>
                   </div>
                 </div>
               </div>
@@ -635,8 +648,10 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
             {/* Show FAQs Section only when not loading */}
             {!faqsLoading && (
               <FAQView
-                extractedFaqs={faqsCache?.extractedFaqs || []}
-                generatedFaqs={faqsCache?.generatedFaqs || []}
+                competitorFaqs={faqsCache?.competitor_faqs || []}
+                existingFaqs={faqsCache?.existing_faqs || []}
+                recommendedCurrentFaq={faqsCache?.recommended_current_faq || []}
+                recommendedFaqs={faqsCache?.recommended_faqs || []}
                 isLoading={false}
                 error={faqsError}
               />

@@ -23,28 +23,28 @@ function clampParameterScore(score: number) {
 function levelStyles(level: 'LOW' | 'MEDIUM' | 'HIGH' | 'Moderate') {
   switch (level) {
     case 'HIGH':
-      return { pill: 'bg-green-100 text-green-700 border-green-200', dot: 'bg-green-500' };
+      return { pill: 'bg-green-100 text-green-700 border-green-200', dot: 'bg-green-400' };
     case 'MEDIUM':
     case 'Moderate':
-      return { pill: 'bg-yellow-100 text-yellow-800 border-yellow-200', dot: 'bg-yellow-500' };
+      return { pill: 'bg-yellow-100 text-yellow-800 border-yellow-200', dot: 'bg-yellow-400' };
     case 'LOW':
     default:
-      return { pill: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-500' };
+      return { pill: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400' };
   }
 }
 
 function scoreColor(score: number) {
   const s = clampScore(score);
-  if (s >= 85) return 'bg-green-500';
-  if (s >= 70) return 'bg-yellow-500';
-  return 'bg-red-500';
+  if (s >= 85) return 'bg-green-400';
+  if (s >= 70) return 'bg-yellow-400';
+  return 'bg-red-400';
 }
 
 function parameterScoreColor(score: number) {
   const s = clampParameterScore(score);
-  if (s >= 8.5) return 'bg-green-500';
-  if (s >= 7.0) return 'bg-yellow-500';
-  return 'bg-red-500';
+  if (s >= 8.5) return 'bg-green-400';
+  if (s >= 7.0) return 'bg-yellow-400';
+  return 'bg-red-400';
 }
 
 function SectionHeader({ title }: { title: string }) {
@@ -138,18 +138,27 @@ function ParameterCard({
                       <div className="bg-slate-900 text-white text-xs rounded-lg shadow-2xl p-3 relative border border-slate-700">
                         <div className="flex items-start justify-between gap-2 mb-1.5">
                           <p className="font-semibold text-blue-300 uppercase tracking-wide">About this parameter</p>
-                          <button
+                          <div
                             onClick={(e) => {
                               e.stopPropagation();
                               setShowInfo(false);
                             }}
-                            className="text-slate-400 hover:text-white transition-colors flex-shrink-0"
+                            className="text-slate-400 hover:text-white transition-colors flex-shrink-0 cursor-pointer"
+                            role="button"
+                            tabIndex={0}
                             aria-label="Close tooltip"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShowInfo(false);
+                              }
+                            }}
                           >
                             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                             </svg>
-                          </button>
+                          </div>
                         </div>
                         <p className="leading-relaxed text-slate-100">{item.info}</p>
                         {/* Arrow pointing left */}
