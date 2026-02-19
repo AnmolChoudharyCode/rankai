@@ -107,9 +107,7 @@ export default function Footer() {
         <div className="border-t border-gray-200 pt-6 sm:pt-6">
           <div className="flex justify-center items-center flex-col">
             
-            <p className='text-[11.8px] text-gray-600 mt-2'>
-              AI Visibility metrics and FAQ suggestions are algorithmically generated and should be treated as advisory insights. Actual results may vary based on search engine updates, LLM behavior, and competitive factors.
-            </p>
+      
             <p className="text-sm text-gray-600">
               © {currentYear} Rank AI. All rights reserved.
             </p>

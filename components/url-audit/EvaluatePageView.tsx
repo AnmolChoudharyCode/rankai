@@ -297,25 +297,26 @@ export default function EvaluatePageView({ data, isLoading, error, onRetry }: Ev
 
   return (
     <div className="space-y-8">
-      {/* Section Header (match FAQ hero styling) */}
-      {/* <div className="relative overflow-hidden rounded-[32px] bg-slate-900 p-8 md:p-10 shadow-xl border border-white/10">
+      {/* Page Header */}
+      <div className="relative overflow-hidden rounded-[32px] bg-slate-900 p-8 md:p-12 shadow-xl border border-white/10">
         <div className="absolute top-0 right-0 p-8 opacity-20 pointer-events-none">
-          <Eye size={170} className="text-indigo-400 rotate-12" />
+          <Eye size={180} className="text-indigo-400 rotate-12" />
         </div>
+        
         <div className="relative z-10 max-w-2xl">
           <div className="flex items-center gap-2 mb-6">
             <span className="px-3 py-1 bg-[#272b8b]/20 text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-widest border border-[#272b8b]">
               AI Evaluation
             </span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tight">
             LLM <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Visibility</span>
-          </h2>
-          <p className="text-slate-300 text-base md:text-lg leading-relaxed font-medium">
-            Understand how confidently a model can extract, summarize, and cite your content—then fix what blocks it.
+          </h1>
+          <p className="text-slate-300 text-lg leading-relaxed font-medium">
+            Understand how confidently a model can extract, summarize, and cite your content then fix what blocks it.
           </p>
         </div>
-      </div> */}
+      </div>
 
       {/* Summary */}
       {/* <div className="bg-gradient-to-br from-indigo-50/30 via-white to-purple-50/30 border-2 border-indigo-100 rounded-[40px] p-6 md:p-10 shadow-xl shadow-indigo-100/10">
