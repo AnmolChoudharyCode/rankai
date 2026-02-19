@@ -81,8 +81,17 @@ export default function Navbar() {
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               const handleClick = () => {
+                // If clicking Dashboard link from url-audit, preserve the flag if data exists
+                if (link.href === '/' && pathname === '/url-audit') {
+                  // Check if there's data in sessionStorage
+                  const hasData = sessionStorage.getItem('url-audit-data');
+                  if (hasData) {
+                    // Keep the flag so data persists when coming back
+                    sessionStorage.setItem(FROM_DASHBOARD_FLAG, 'true');
+                  }
+                }
                 // If clicking URL Audit link from Dashboard, set flag to preserve data
-                if (link.href === '/url-audit' && pathname === '/') {
+                else if (link.href === '/url-audit' && pathname === '/') {
                   sessionStorage.setItem(FROM_DASHBOARD_FLAG, 'true');
                 } else if (link.href === '/url-audit') {
                   // If clicking URL Audit link from anywhere else, clear the flag to clear data
@@ -157,8 +166,17 @@ export default function Navbar() {
               const isActive = pathname === link.href;
               const handleClick = () => {
                 setIsMobileMenuOpen(false);
+                // If clicking Dashboard link from url-audit, preserve the flag if data exists
+                if (link.href === '/' && pathname === '/url-audit') {
+                  // Check if there's data in sessionStorage
+                  const hasData = sessionStorage.getItem('url-audit-data');
+                  if (hasData) {
+                    // Keep the flag so data persists when coming back
+                    sessionStorage.setItem(FROM_DASHBOARD_FLAG, 'true');
+                  }
+                }
                 // If clicking URL Audit link from Dashboard, set flag to preserve data
-                if (link.href === '/url-audit' && pathname === '/') {
+                else if (link.href === '/url-audit' && pathname === '/') {
                   sessionStorage.setItem(FROM_DASHBOARD_FLAG, 'true');
                 } else if (link.href === '/url-audit') {
                   // If clicking URL Audit link from anywhere else, clear the flag to clear data

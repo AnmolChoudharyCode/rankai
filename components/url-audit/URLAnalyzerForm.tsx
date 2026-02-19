@@ -85,6 +85,10 @@ export default function URLAnalyzerForm() {
     // Check if we came from Dashboard (flag exists)
     const fromDashboard = sessionStorage.getItem(FROM_DASHBOARD_FLAG) === 'true';
     
+    // Check if data exists in sessionStorage
+    const stored = sessionStorage.getItem(STORAGE_KEY);
+    const hasStoredData = stored !== null;
+    
     if (isReload) {
       // Clear sessionStorage on page reload
       sessionStorage.removeItem(STORAGE_KEY);
@@ -93,21 +97,25 @@ export default function URLAnalyzerForm() {
       return;
     }
     
-    // If not from Dashboard (direct link click), clear data
-    if (!fromDashboard) {
-      sessionStorage.removeItem(STORAGE_KEY);
+    // Check document.referrer to see if we came from dashboard
+    // This is a fallback if the flag wasn't set in time
+    const referrer = typeof document !== 'undefined' ? document.referrer : '';
+    const cameFromDashboard = fromDashboard || 
+      (hasStoredData && (referrer.includes('/') && !referrer.includes('/url-audit')));
+    
+    // If we have stored data and it's not a reload, try to restore it
+    // Only clear if it's a direct link click (no stored data AND no flag AND referrer doesn't suggest dashboard)
+    if (!hasStoredData && !fromDashboard && !cameFromDashboard) {
+      // No data to restore and not from dashboard - clear flag
+      sessionStorage.removeItem(FROM_DASHBOARD_FLAG);
       setIsRestoring(false);
       return;
     }
     
-    // Don't clear the flag here - let AuditResults clear it after restoration
-    // This ensures AuditResults can check the flag during its restoration
-    
-    // Restore saved audit data from sessionStorage (only if coming from Dashboard)
-    try {
-      const stored = sessionStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsedData: StoredAuditData = JSON.parse(stored);
+    // If we have stored data, restore it (even if flag wasn't set in time)
+    if (hasStoredData) {
+      try {
+        const parsedData: StoredAuditData = JSON.parse(stored!);
         // Restore form inputs and audit data
         setUrl(parsedData.url || '');
         setGeoRegion(parsedData.geoRegion || 'India');
@@ -123,14 +131,20 @@ export default function URLAnalyzerForm() {
           setOverviewData(parsedData.overviewData);
           setShowResults(true);
         }
+        
+        // Set flag if it wasn't set (for next navigation)
+        if (!fromDashboard && cameFromDashboard) {
+          sessionStorage.setItem(FROM_DASHBOARD_FLAG, 'true');
+        }
+      } catch (err) {
+        console.error('Error restoring audit data:', err);
+        // Clear corrupted data
+        sessionStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem(FROM_DASHBOARD_FLAG);
       }
-    } catch (err) {
-      console.error('Error restoring audit data:', err);
-      // Clear corrupted data
-      sessionStorage.removeItem(STORAGE_KEY);
-    } finally {
-      setIsRestoring(false);
     }
+    
+    setIsRestoring(false);
   }, []);
 
   // Fetch industries and page types on mount

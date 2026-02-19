@@ -847,6 +847,9 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
                 onRetry={() => fetchFAQs(true)}
               />
             )}
+             <p className='text-[11.8px] text-gray-600 mt-2 px-8 py-8'>
+              AI Visibility metrics and FAQ suggestions are algorithmically generated and should be treated as advisory insights. Actual results may vary based on search engine updates, LLM behavior, and competitive factors.
+            </p>
           </div>
         )}
 
@@ -869,9 +872,7 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
         )}
       </div>
 
-            <p className='text-[11.8px] text-gray-600 mt-2 px-10 py-10'>
-              AI Visibility metrics and FAQ suggestions are algorithmically generated and should be treated as advisory insights. Actual results may vary based on search engine updates, LLM behavior, and competitive factors.
-            </p>
+           
     </div>
   );
 }
