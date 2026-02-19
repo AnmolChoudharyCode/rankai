@@ -35,6 +35,7 @@ interface AuditResultsProps {
   seoData: SEOIssuesResponse;
   rawHtmlData: RawHTMLResponse;
   overviewData: OverviewResponse;
+  storageKey?: string;
 }
 
 function extractDomain(url: string): string {
@@ -47,7 +48,7 @@ function extractDomain(url: string): string {
   }
 }
 
-export default function AuditResults({ url, geoRegion, primaryKeyword, secondaryKeyword,industry,pageType, seoData, rawHtmlData, overviewData }: AuditResultsProps) {
+export default function AuditResults({ url, geoRegion, primaryKeyword, secondaryKeyword,industry,pageType, seoData, rawHtmlData, overviewData, storageKey = 'url-audit-data' }: AuditResultsProps) {
   const [activeTab, setActiveTab] = useState('Summary');
   const [activeSubTab, setActiveSubTab] = useState<'SEO' | 'GEO'>('SEO');
   const [filters, setFilters] = useState<{
@@ -75,6 +76,12 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
   const [evaluationError, setEvaluationError] = useState<string | null>(null);
   const evaluationFetchedRef = useRef<Set<string>>(new Set());
   const evaluationCacheRef = useRef<EvaluatePageResponse | null>(null);
+  const [isRestoring, setIsRestoring] = useState(true);
+  
+  // Refs to track if data was just restored vs newly fetched (to avoid saving during restoration)
+  const competitorsJustRestoredRef = useRef(false);
+  const faqsJustRestoredRef = useRef(false);
+  const evaluationJustRestoredRef = useRef(false);
 
   const tabs = [
     'Summary',
@@ -84,10 +91,150 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
     'Competitors',
   ];
 
+  // Check if page was loaded via reload and clear data if so, otherwise restore from sessionStorage
+  useEffect(() => {
+    // Check navigation type to detect reload
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+    const isReload = navigation?.type === 'reload';
+    
+    // Check if we came from Dashboard (flag exists)
+    const fromDashboard = sessionStorage.getItem('url-audit-from-dashboard') === 'true';
+    
+    if (isReload) {
+      // Data will be cleared by URLAnalyzerForm, so just mark as not restoring
+      setIsRestoring(false);
+      return;
+    }
+    
+    // Only restore if coming from Dashboard AND we have the required data
+    if (!fromDashboard || !url || !primaryKeyword || !secondaryKeyword) {
+      setIsRestoring(false);
+      // Clear flag if we're not restoring (not from dashboard or missing data)
+      if (fromDashboard) {
+        sessionStorage.removeItem('url-audit-from-dashboard');
+      }
+      return;
+    }
+    
+    // Restore competitors, FAQs, and evaluation data from sessionStorage
+    // IMPORTANT: Set refs synchronously BEFORE setting isRestoring to false
+    // This ensures fetch functions see the cached data immediately
+    try {
+      const stored = sessionStorage.getItem(storageKey);
+      if (stored) {
+        const parsedData = JSON.parse(stored);
+        
+        // Restore competitors data
+        if (parsedData.competitors && Array.isArray(parsedData.competitors)) {
+          competitorsJustRestoredRef.current = true;
+          setCompetitors(parsedData.competitors);
+          competitorsFetchedRef.current = true; // Mark as fetched to prevent re-fetching
+        }
+        
+        // Restore FAQs data - set ref FIRST before state to prevent race condition
+        if (parsedData.faqsData) {
+          faqsJustRestoredRef.current = true;
+          const faqsKey = `${url}-${primaryKeyword}-${secondaryKeyword}`;
+          // Set refs synchronously - these are checked by fetch functions
+          faqsCacheRef.current = parsedData.faqsData;
+          faqsFetchedRef.current.add(faqsKey);
+          // Set state after ref to ensure ref is checked first
+          setFaqsCache(parsedData.faqsData);
+        }
+        
+        // Restore evaluation data - set ref FIRST before state to prevent race condition
+        if (parsedData.evaluationData) {
+          evaluationJustRestoredRef.current = true;
+          const evalKey = `${url}-${primaryKeyword}-${secondaryKeyword}-${geoRegion}-${industry}-${pageType}`;
+          // Set refs synchronously - these are checked by fetch functions
+          evaluationCacheRef.current = parsedData.evaluationData;
+          evaluationFetchedRef.current.add(evalKey);
+          // Set state after ref to ensure ref is checked first
+          setEvaluationCache(parsedData.evaluationData);
+        }
+      }
+      
+      // Don't clear the flag here - let it persist until fetch useEffects have checked it
+      // The flag will be cleared after fetch useEffects have run and seen the restored data
+    } catch (err) {
+      console.error('Error restoring additional audit data:', err);
+      // Clear flag on error
+      sessionStorage.removeItem('url-audit-from-dashboard');
+    } finally {
+      // Use setTimeout to ensure refs are set before fetch useEffects run
+      // This gives React a chance to process the ref updates
+      setTimeout(() => {
+        setIsRestoring(false);
+        // Clear the flag after isRestoring is set to false
+        // This ensures fetch useEffects can check it before it's cleared
+        setTimeout(() => {
+          sessionStorage.removeItem('url-audit-from-dashboard');
+        }, 100);
+      }, 0);
+    }
+  }, [url, primaryKeyword, secondaryKeyword, geoRegion, industry, pageType, storageKey]);
+
+  useEffect(() => {
+    if (!isRestoring && !competitorsJustRestoredRef.current && competitors.length > 0) {
+      try {
+        const stored = sessionStorage.getItem(storageKey);
+        if (stored) {
+          const parsedData = JSON.parse(stored);
+          const updatedData = {
+            ...parsedData,
+            competitors: competitors,
+          };
+          sessionStorage.setItem(storageKey, JSON.stringify(updatedData));
+        }
+      } catch (err) {
+        console.error('Error saving competitors data to sessionStorage:', err);
+      }
+    }
+    competitorsJustRestoredRef.current = false;
+  }, [competitors, isRestoring, storageKey]);
+
+  useEffect(() => {
+    if (!isRestoring && !faqsJustRestoredRef.current && faqsCache) {
+      try {
+        const stored = sessionStorage.getItem(storageKey);
+        if (stored) {
+          const parsedData = JSON.parse(stored);
+          const updatedData = {
+            ...parsedData,
+            faqsData: faqsCache,
+          };
+          sessionStorage.setItem(storageKey, JSON.stringify(updatedData));
+        }
+      } catch (err) {
+        console.error('Error saving FAQs data to sessionStorage:', err);
+      }
+    }
+    faqsJustRestoredRef.current = false;
+  }, [faqsCache, isRestoring, storageKey]);
+
+  useEffect(() => {
+    if (!isRestoring && !evaluationJustRestoredRef.current && evaluationCache) {
+      try {
+        const stored = sessionStorage.getItem(storageKey);
+        if (stored) {
+          const parsedData = JSON.parse(stored);
+          const updatedData = {
+            ...parsedData,
+            evaluationData: evaluationCache,
+          };
+          sessionStorage.setItem(storageKey, JSON.stringify(updatedData));
+        }
+      } catch (err) {
+        console.error('Error saving evaluation data to sessionStorage:', err);
+      }
+    }
+    evaluationJustRestoredRef.current = false;
+  }, [evaluationCache, isRestoring, storageKey]);
+
   // Fetch competitors data once when component mounts
   useEffect(() => {
     const fetchCompetitors = async () => {
-      if (!url || !primaryKeyword || !secondaryKeyword || competitorsFetchedRef.current) {
+      if (!url || !primaryKeyword || !secondaryKeyword || competitorsFetchedRef.current || isRestoring) {
         return;
       }
 
@@ -134,11 +281,11 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
     };
 
     fetchCompetitors();
-  }, [url, primaryKeyword, secondaryKeyword]);
+  }, [url, primaryKeyword, secondaryKeyword, isRestoring]);
 
   // Extract FAQ fetch function for reuse (including retry)
   const fetchFAQs = useCallback(async (forceRetry = false) => {
-    if (!url || !primaryKeyword || !secondaryKeyword) {
+    if (!url || !primaryKeyword || !secondaryKeyword || isRestoring) {
       return;
     }
 
@@ -203,15 +350,22 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
     } finally {
       setFaqsLoading(false);
     }
-  }, [url, primaryKeyword, secondaryKeyword]);
+  }, [url, primaryKeyword, secondaryKeyword, isRestoring]);
 
   useEffect(() => {
+    // Only fetch if not restoring AND we don't already have cached data
+    // Check refs first - if data exists in refs, don't fetch (it was restored)
+    // Also check if we came from dashboard - if so, data should be restored, not fetched
+    const fromDashboard = sessionStorage.getItem('url-audit-from-dashboard') === 'true';
+    if (isRestoring || fromDashboard || faqsCacheRef.current || faqsJustRestoredRef.current) {
+      return; // Don't fetch if restoring, coming from dashboard, already have data in refs, or just restored
+    }
     fetchFAQs(false);
-  }, [fetchFAQs]);
+  }, [fetchFAQs, isRestoring]);
 
   // Extract evaluation fetch function for reuse (including retry)
   const fetchEvaluation = useCallback(async (forceRetry = false) => {
-    if (!url || !primaryKeyword || !secondaryKeyword) {
+    if (!url || !primaryKeyword || !secondaryKeyword || isRestoring) {
       return;
     }
 
@@ -284,11 +438,16 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
     } finally {
       setEvaluationLoading(false);
     }
-  }, [url, primaryKeyword, secondaryKeyword, geoRegion, industry, pageType, seoData.geoScore]);
+  }, [url, primaryKeyword, secondaryKeyword, geoRegion, industry, pageType, seoData.geoScore, isRestoring]);
 
   useEffect(() => {
+    // Only fetch if not restoring AND we don't already have cached data
+    // Check refs first - if data exists in refs, don't fetch (it was restored)
+    if (isRestoring || evaluationCacheRef.current || evaluationJustRestoredRef.current) {
+      return; // Don't fetch if restoring, already have data in refs, or just restored
+    }
     fetchEvaluation(false);
-  }, [fetchEvaluation]);
+  }, [fetchEvaluation, isRestoring]);
 
   // Helper function to map API check status to UI status
   const getStatus = (pass: boolean, severity: string): 'passed' | 'failed' => {
@@ -663,22 +822,6 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-bold text-red-900 mb-1">AI Recommendations Failed</h3>
                     <p className="text-sm text-red-700 mb-2">Both LLM evaluation and FAQ recommendations failed to load.</p>
-                    <div className="space-y-1 mb-4">
-                      <p className="text-xs text-red-600">• LLM Visibility: {evaluationError}</p>
-                      <p className="text-xs text-red-600">• FAQ Recommendations: {faqsError}</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        fetchEvaluation(true);
-                        fetchFAQs(true);
-                      }}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors duration-200"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Retry All
-                    </button>
                   </div>
                 </div>
               </div>
@@ -698,8 +841,6 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
             {!faqsLoading && !(evaluationError && faqsError) && (
               <FAQView
                 competitorFaqs={faqsCache?.competitor_faqs || []}
-                existingFaqs={faqsCache?.existing_faqs || []}
-                recommendedCurrentFaq={faqsCache?.recommended_current_faq || []}
                 recommendedFaqs={faqsCache?.recommended_faqs || []}
                 isLoading={false}
                 error={faqsError}

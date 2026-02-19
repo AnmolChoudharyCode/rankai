@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import QuickActionCard from './QuickActionCard';
 
+const FROM_DASHBOARD_FLAG = 'url-audit-from-dashboard';
+
 export default function QuickActionsSection() {
   const router = useRouter();
 
@@ -12,6 +14,11 @@ export default function QuickActionsSection() {
       description: 'Get instant SEO insights for any webpage',
       color: 'blue' as const,
       href: '/url-audit',
+      onClick: () => {
+        // Set flag when navigating from Dashboard to URL Audit
+        sessionStorage.setItem(FROM_DASHBOARD_FLAG, 'true');
+        router.push('/url-audit');
+      },
       icon: (
         <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -53,7 +60,7 @@ export default function QuickActionsSection() {
             description={action.description}
             icon={action.icon}
             color={action.color}
-            onClick={() => router.push(action.href)}
+            onClick={action.onClick || (() => router.push(action.href))}
           />
         ))}
       </div>

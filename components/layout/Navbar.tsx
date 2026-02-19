@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import LoginModal from './LoginModal';
 
+const FROM_DASHBOARD_FLAG = 'url-audit-from-dashboard';
+
 export default function Navbar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -78,10 +80,20 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center gap-6">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
+              const handleClick = () => {
+                // If clicking URL Audit link from Dashboard, set flag to preserve data
+                if (link.href === '/url-audit' && pathname === '/') {
+                  sessionStorage.setItem(FROM_DASHBOARD_FLAG, 'true');
+                } else if (link.href === '/url-audit') {
+                  // If clicking URL Audit link from anywhere else, clear the flag to clear data
+                  sessionStorage.removeItem(FROM_DASHBOARD_FLAG);
+                }
+              };
               return (
                 <Link
                   key={link.name}
                   href={link.href}
+                  onClick={handleClick}
                   className={`text-sm font-medium transition-colors cursor-pointer ${
                     isActive
                       ? 'text-[#272b8b] border-b-2 border-[#272b8b] pb-1'
@@ -143,11 +155,21 @@ export default function Navbar() {
           <div className="flex flex-col gap-2">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
+              const handleClick = () => {
+                setIsMobileMenuOpen(false);
+                // If clicking URL Audit link from Dashboard, set flag to preserve data
+                if (link.href === '/url-audit' && pathname === '/') {
+                  sessionStorage.setItem(FROM_DASHBOARD_FLAG, 'true');
+                } else if (link.href === '/url-audit') {
+                  // If clicking URL Audit link from anywhere else, clear the flag to clear data
+                  sessionStorage.removeItem(FROM_DASHBOARD_FLAG);
+                }
+              };
               return (
                 <Link
                   key={link.name}
                   href={link.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={handleClick}
                   className={`px-4 py-2 text-sm font-medium transition-colors rounded-md ${
                     isActive
                       ? 'text-[#272b8b] bg-[#272b8b]/10'

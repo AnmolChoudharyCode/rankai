@@ -2,7 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import AuditResults from './AuditResults';
-import { getSEOIssues, getRawHTML, getOverview, SEOIssuesResponse, RawHTMLResponse, OverviewResponse, getIndustries, getPageTypes } from '@/lib/api';
+import { getSEOIssues, getRawHTML, getOverview, SEOIssuesResponse, RawHTMLResponse, OverviewResponse, getIndustries, getPageTypes, Competitor, FAQResponse, EvaluatePageResponse } from '@/lib/api';
+
+const STORAGE_KEY = 'url-audit-data';
+const FROM_DASHBOARD_FLAG = 'url-audit-from-dashboard';
+
+interface StoredAuditData {
+  url: string;
+  geoRegion: string;
+  primaryKeyword: string;
+  secondaryKeyword: string;
+  industry: string;
+  pageType: string;
+  seoData: SEOIssuesResponse;
+  rawHtmlData: RawHTMLResponse;
+  overviewData: OverviewResponse;
+  competitors?: Competitor[];
+  faqsData?: FAQResponse;
+  evaluationData?: EvaluatePageResponse;
+  timestamp: number;
+}
+
 const animatedDottedLineStyle = `
   @keyframes rotate {
     from {
@@ -48,6 +68,70 @@ export default function URLAnalyzerForm() {
   const [industries, setIndustries] = useState<string[]>([]);
   const [pageTypes, setPageTypes] = useState<string[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
+  const [isRestoring, setIsRestoring] = useState(true);
+
+  // Check if page was loaded via reload or direct link click, and clear data if so
+  useEffect(() => {
+    // Check navigation type to detect reload (works for browser reloads like F5, Ctrl+R, etc.)
+    let isReload = false;
+    try {
+      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+      isReload = navigation?.type === 'reload';
+    } catch (e) {
+      // Fallback: if Performance API is not available, assume it's not a reload
+      isReload = false;
+    }
+    
+    // Check if we came from Dashboard (flag exists)
+    const fromDashboard = sessionStorage.getItem(FROM_DASHBOARD_FLAG) === 'true';
+    
+    if (isReload) {
+      // Clear sessionStorage on page reload
+      sessionStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(FROM_DASHBOARD_FLAG);
+      setIsRestoring(false);
+      return;
+    }
+    
+    // If not from Dashboard (direct link click), clear data
+    if (!fromDashboard) {
+      sessionStorage.removeItem(STORAGE_KEY);
+      setIsRestoring(false);
+      return;
+    }
+    
+    // Don't clear the flag here - let AuditResults clear it after restoration
+    // This ensures AuditResults can check the flag during its restoration
+    
+    // Restore saved audit data from sessionStorage (only if coming from Dashboard)
+    try {
+      const stored = sessionStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsedData: StoredAuditData = JSON.parse(stored);
+        // Restore form inputs and audit data
+        setUrl(parsedData.url || '');
+        setGeoRegion(parsedData.geoRegion || 'India');
+        setPrimaryKeyword(parsedData.primaryKeyword || '');
+        setSecondaryKeyword(parsedData.secondaryKeyword || '');
+        setIndustry(parsedData.industry || '');
+        setPageType(parsedData.pageType || '');
+        
+        // Restore audit results if they exist
+        if (parsedData.seoData && parsedData.rawHtmlData && parsedData.overviewData) {
+          setSeoData(parsedData.seoData);
+          setRawHtmlData(parsedData.rawHtmlData);
+          setOverviewData(parsedData.overviewData);
+          setShowResults(true);
+        }
+      }
+    } catch (err) {
+      console.error('Error restoring audit data:', err);
+      // Clear corrupted data
+      sessionStorage.removeItem(STORAGE_KEY);
+    } finally {
+      setIsRestoring(false);
+    }
+  }, []);
 
   // Fetch industries and page types on mount
   useEffect(() => {
@@ -87,11 +171,40 @@ export default function URLAnalyzerForm() {
     return () => clearInterval(interval);
   }, [isLoading]);
 
+  // Save audit data to sessionStorage whenever it changes
+  useEffect(() => {
+    if (seoData && rawHtmlData && overviewData && !isRestoring) {
+      try {
+        const dataToStore: StoredAuditData = {
+          url,
+          geoRegion,
+          primaryKeyword,
+          secondaryKeyword,
+          industry,
+          pageType,
+          seoData,
+          rawHtmlData,
+          overviewData,
+          timestamp: Date.now(),
+        };
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(dataToStore));
+      } catch (err) {
+        console.error('Error saving audit data to sessionStorage:', err);
+      }
+    }
+  }, [seoData, rawHtmlData, overviewData, url, geoRegion, primaryKeyword, secondaryKeyword, industry, pageType, isRestoring]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (url.trim() && primaryKeyword.trim() && secondaryKeyword.trim()) {
       setIsLoading(true);
       setError(null);
+      // Clear previous results when starting a new audit
+      setShowResults(false);
+      setSeoData(null);
+      setRawHtmlData(null);
+      setOverviewData(null);
+      
       try {
         const payload = {
           url: url.trim(),
@@ -113,6 +226,8 @@ export default function URLAnalyzerForm() {
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch audit data');
         console.error('Error fetching audit data:', err);
+        // Clear sessionStorage on error
+        sessionStorage.removeItem(STORAGE_KEY);
       } finally {
         setIsLoading(false);
       }
@@ -428,7 +543,8 @@ export default function URLAnalyzerForm() {
           industry={industry}
           pageType={pageType}
           rawHtmlData={rawHtmlData} 
-          overviewData={overviewData} 
+          overviewData={overviewData}
+          storageKey={STORAGE_KEY}
         />
       )}
     </div>

@@ -1,20 +1,18 @@
 'use client';
 
 import { FAQItem } from '@/lib/api';
-import { Sparkles, Target, Zap, Layers, Info, FileText, CheckCircle } from 'lucide-react';
+import { Sparkles, Target, Zap, Layers, Info } from 'lucide-react';
 import Accordion from './Accordion';
 
 interface FAQViewProps {
   competitorFaqs: FAQItem[];
-  existingFaqs: FAQItem[];
-  recommendedCurrentFaq: FAQItem[];
   recommendedFaqs: FAQItem[];
   isLoading?: boolean;
   error?: string | null;
   onRetry?: () => void;
 }
 
-export default function FAQView({ competitorFaqs, existingFaqs, recommendedCurrentFaq, recommendedFaqs, isLoading, error, onRetry }: FAQViewProps) {
+export default function FAQView({ competitorFaqs, recommendedFaqs, isLoading, error, onRetry }: FAQViewProps) {
   // Don't render anything when loading - unified banner handles it
   if (isLoading) {
     return null;
@@ -23,7 +21,7 @@ export default function FAQView({ competitorFaqs, existingFaqs, recommendedCurre
   // Show error
   if (error) {
     return (
-      <div className="p-6 bg-red-50 border-2 border-red-200 rounded-[32px] shadow-sm">
+      <div className="p-6  border-2  rounded-[32px] shadow-sm">
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
             <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -32,11 +30,11 @@ export default function FAQView({ competitorFaqs, existingFaqs, recommendedCurre
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-bold text-red-900 mb-1">FAQ Recommendations Failed</h3>
-            <p className="text-sm text-red-700 mb-4">{error}</p>
+            <p className="text-sm text-red-700 mb-3">{error}</p>
             {onRetry && (
               <button
                 onClick={onRetry}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors duration-200"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#273b8b] text-white text-sm font-semibold rounded-lg transition-colors duration-200 hover:bg-[#1e2d6b]"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -89,11 +87,11 @@ export default function FAQView({ competitorFaqs, existingFaqs, recommendedCurre
                   <h2 className="text-xl font-extrabold text-slate-900">Competitor FAQs</h2>
                   <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Research Reference</p>
                 </div>
-                {competitorFaqs && competitorFaqs.length > 0 && (
+                {/* {competitorFaqs && competitorFaqs.length > 0 && (
                   <span className="px-3 py-1 bg-slate-200 text-slate-700 rounded-full text-xs font-bold">
                     {competitorFaqs.length}
                   </span>
-                )}
+                )} */}
               </div>
             </div>
 
@@ -125,78 +123,12 @@ export default function FAQView({ competitorFaqs, existingFaqs, recommendedCurre
             )}
           </div>
 
-          {/* EXISTING FAQs SECTION */}
-          <div className="bg-white border-2 border-slate-200 rounded-[32px] p-6 md:p-8 shadow-lg">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 bg-slate-100 border border-slate-200 rounded-2xl flex items-center justify-center text-slate-600 shadow-sm">
-                <FileText size={24} />
-              </div>
-              <div className="flex-1 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-extrabold text-slate-900">Existing FAQs</h2>
-                  <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Current Content</p>
-                </div>
-                {existingFaqs && existingFaqs.length > 0 && (
-                  <span className="px-3 py-1 bg-slate-200 text-slate-700 rounded-full text-xs font-bold">
-                    {existingFaqs.length}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              {existingFaqs && existingFaqs.length > 0 ? (
-                existingFaqs.map((faq, index) => (
-                  <Accordion 
-                    key={index} 
-                    faq={faq} 
-                    type="existing" 
-                  />
-                ))
-              ) : (
-                <div className="text-center py-12 text-slate-400">
-                  <FileText size={32} className="mx-auto mb-3 opacity-50" />
-                  <p className="text-sm font-medium">No existing FAQs found</p>
-                  <p className="text-xs mt-1 text-slate-400">No FAQs detected on your current page</p>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
 
         {/* RIGHT COLUMN: RECOMMENDED FAQs */}
         <div className="xl:col-span-6 space-y-6">
           
-          {/* RECOMMENDED CURRENT FAQ SECTION */}
-          {recommendedCurrentFaq && recommendedCurrentFaq.length > 0 && (
-            <div className="bg-gradient-to-br from-green-50/50 via-white to-emerald-50/30 border-2 border-green-200 rounded-[32px] p-6 md:p-8 shadow-lg">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-green-100 border border-green-200 rounded-2xl flex items-center justify-center text-green-700 shadow-sm">
-                  <CheckCircle size={24} />
-                </div>
-                <div className="flex-1 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-extrabold text-slate-900">Recommended Current FAQs</h2>
-                    <p className="text-green-600 text-xs font-bold uppercase tracking-widest">Priority Updates</p>
-                  </div>
-                  <span className="px-3 py-1 bg-green-200 text-green-700 rounded-full text-xs font-bold">
-                    {recommendedCurrentFaq.length}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                {recommendedCurrentFaq.map((faq, index) => (
-                  <Accordion 
-                    key={index} 
-                    faq={faq} 
-                    type="recommended" 
-                    isOpenByDefault={index === 0}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+       
 
           {/* RECOMMENDED FAQs SECTION */}
           <div className="bg-gradient-to-br from-indigo-50/30 via-white to-purple-50/30 border-2 border-indigo-100 rounded-[32px] p-6 md:p-8 shadow-xl shadow-indigo-100/10">
@@ -213,11 +145,7 @@ export default function FAQView({ competitorFaqs, existingFaqs, recommendedCurre
                       <span className="text-[#272b8b] text-xs font-black uppercase tracking-widest">AI Optimized</span>
                     </div>
                   </div>
-                  {recommendedFaqs && recommendedFaqs.length > 0 && (
-                    <span className="ml-auto px-3 py-1 bg-indigo-100 text-[#272b8b] rounded-full text-xs font-bold shrink-0">
-                      {recommendedFaqs.length}
-                    </span>
-                  )}
+             
                   
                 </div>
               </div>
@@ -230,7 +158,7 @@ export default function FAQView({ competitorFaqs, existingFaqs, recommendedCurre
                     key={index} 
                     faq={faq} 
                     type="recommended" 
-                    isOpenByDefault={index === 0 && recommendedCurrentFaq.length === 0}
+                    isOpenByDefault={index === 0}
                   />
                 ))
               ) : (

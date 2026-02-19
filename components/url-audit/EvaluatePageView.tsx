@@ -266,7 +266,7 @@ export default function EvaluatePageView({ data, isLoading, error, onRetry }: Ev
   // Show error
   if (error) {
     return (
-      <div className="p-6 bg-red-50 border-2 border-red-200 rounded-[32px] shadow-sm">
+      <div className="p-6 border-2 rounded-[32px] shadow-sm">
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
             <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,11 +275,11 @@ export default function EvaluatePageView({ data, isLoading, error, onRetry }: Ev
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-bold text-red-900 mb-1">LLM Visibility Evaluation Failed</h3>
-            <p className="text-sm text-red-700 mb-4">{error}</p>
+            <p className="text-sm text-red-700 mb-3">{error}</p>
             {onRetry && (
               <button
                 onClick={onRetry}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors duration-200"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#273b8b] text-white text-sm font-semibold rounded-lg transition-colors duration-200 hover:bg-[#1e2d6b]"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -298,7 +298,7 @@ export default function EvaluatePageView({ data, isLoading, error, onRetry }: Ev
   return (
     <div className="space-y-8">
       {/* Section Header (match FAQ hero styling) */}
-      <div className="relative overflow-hidden rounded-[32px] bg-slate-900 p-8 md:p-10 shadow-xl border border-white/10">
+      {/* <div className="relative overflow-hidden rounded-[32px] bg-slate-900 p-8 md:p-10 shadow-xl border border-white/10">
         <div className="absolute top-0 right-0 p-8 opacity-20 pointer-events-none">
           <Eye size={170} className="text-indigo-400 rotate-12" />
         </div>
@@ -315,7 +315,7 @@ export default function EvaluatePageView({ data, isLoading, error, onRetry }: Ev
             Understand how confidently a model can extract, summarize, and cite your content—then fix what blocks it.
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* Summary */}
       {/* <div className="bg-gradient-to-br from-indigo-50/30 via-white to-purple-50/30 border-2 border-indigo-100 rounded-[40px] p-6 md:p-10 shadow-xl shadow-indigo-100/10">
@@ -370,9 +370,9 @@ export default function EvaluatePageView({ data, isLoading, error, onRetry }: Ev
         )}
       </div> */}
 
-      {/* Parameter Scores */}
+      {/*Visibility Metrics */}
       <div className="space-y-6">
-        <SectionHeader title="Parameter scores" />
+        <SectionHeader title="Visibility Metrics" />
         <div className="grid grid-cols-1 gap-4 overflow-visible">
           {sortedParams.map((p, idx) => (
             <ParameterCard
