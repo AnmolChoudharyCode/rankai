@@ -100,20 +100,29 @@ export default function URLAnalyzerForm() {
     // Check document.referrer to see if we came from dashboard
     // This is a fallback if the flag wasn't set in time
     const referrer = typeof document !== 'undefined' ? document.referrer : '';
-    const cameFromDashboard = fromDashboard || 
-      (hasStoredData && (referrer.includes('/') && !referrer.includes('/url-audit')));
+    // Check if referrer is the dashboard (same origin and path is '/' or empty)
+    let referrerIsDashboard = false;
+    if (referrer && typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      referrerIsDashboard = 
+        (referrer.endsWith('/') || referrer === origin || referrer === origin + '/') &&
+        !referrer.includes('/url-audit');
+    }
+    const cameFromDashboard = fromDashboard || referrerIsDashboard;
     
-    // If we have stored data and it's not a reload, try to restore it
-    // Only clear if it's a direct link click (no stored data AND no flag AND referrer doesn't suggest dashboard)
-    if (!hasStoredData && !fromDashboard && !cameFromDashboard) {
-      // No data to restore and not from dashboard - clear flag
+    // If flag is NOT set and we didn't come from dashboard, this is a direct navigation - clear data
+    if (!fromDashboard && !cameFromDashboard) {
+      // Direct navigation (not from dashboard) - clear all data
+      if (hasStoredData) {
+        sessionStorage.removeItem(STORAGE_KEY);
+      }
       sessionStorage.removeItem(FROM_DASHBOARD_FLAG);
       setIsRestoring(false);
       return;
     }
     
-    // If we have stored data, restore it (even if flag wasn't set in time)
-    if (hasStoredData) {
+    // If we have stored data, restore it (only if flag is set or came from dashboard)
+    if (hasStoredData && (fromDashboard || cameFromDashboard)) {
       try {
         const parsedData: StoredAuditData = JSON.parse(stored!);
         // Restore form inputs and audit data

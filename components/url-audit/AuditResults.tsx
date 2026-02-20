@@ -508,6 +508,13 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
     return { passed, failed };
   }, [seoData]);
 
+  // Check if both APIs have completed (either success or error)
+  const bothAPIsCompleted = useMemo(() => {
+    const evaluationDone = !evaluationLoading && (evaluationCache !== null || evaluationError !== null);
+    const faqsDone = !faqsLoading && (faqsCache !== null || faqsError !== null);
+    return evaluationDone && faqsDone;
+  }, [evaluationLoading, evaluationCache, evaluationError, faqsLoading, faqsCache, faqsError]);
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 mt-8 max-w-6xl mx-auto">
       {/* Tabs */}
@@ -847,9 +854,13 @@ export default function AuditResults({ url, geoRegion, primaryKeyword, secondary
                 onRetry={() => fetchFAQs(true)}
               />
             )}
-             <p className='text-[11.8px] text-gray-600 mt-2 px-8 py-8'>
-              AI Visibility metrics and FAQ suggestions are algorithmically generated and should be treated as advisory insights. Actual results may vary based on search engine updates, LLM behavior, and competitive factors.
-            </p>
+            
+            {/* Disclaimer - Only show when both APIs are done (either success or error) */}
+            {bothAPIsCompleted && (
+              <p className='text-[11.8px] text-gray-600 mt-2 px-8 py-8'>
+                AI Visibility metrics and FAQ suggestions are algorithmically generated and should be treated as advisory insights. Actual results may vary based on search engine updates, LLM behavior, and competitive factors.
+              </p>
+            )}
           </div>
         )}
 
