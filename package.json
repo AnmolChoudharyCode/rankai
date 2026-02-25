@@ -11,14 +11,16 @@
     "build:dev": "cross-env NODE_ENV=development next build",
     "build:uat": "dotenv -e .env.uat -- cross-env NEXT_PUBLIC_ENV=uat next build",
     "build:prod": "cross-env NODE_ENV=production next build",
-    "start": "next start",
     "start:dev": "cross-env NODE_ENV=development next start",
     "start:uat": "cross-env NEXT_PUBLIC_ENV=uat next start",
     "start:prod": "cross-env NODE_ENV=production next start",
     "setup:env": "node scripts/setup-env.js",
-    "lint": "eslint"
+    "lint": "eslint",
+    "start": "next start -p $PORT",
+    "gcp-build": "next build"
   },
   "dependencies": {
+    "typescript": "5.9.3",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.563.0",
     "next": "^16.0.10",
@@ -30,11 +32,12 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "baseline-browser-mapping": "^2.10.0",
     "cross-env": "^7.0.3",
     "dotenv-cli": "^7.4.4",
     "eslint": "^9",
     "eslint-config-next": "^16.0.10",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "5.9.3"
   }
 }
