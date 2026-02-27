@@ -2,6 +2,7 @@ service: rankai-frontend
 
 runtime: nodejs20
 
+
 env_variables:
   NODE_ENV: "development"
 
